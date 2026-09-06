@@ -1,30 +1,36 @@
-import { Audio } from 'expo-av';
+/**
+ * Crash-proof SoundManager for Expo Go & Web
+ * Safe synth tone player with zero missing-native-module risk.
+ */
 
-// Audio state
 let isMuted = false;
-let bgmSound = null;
 
-// Clean base64 audio clips or synthesized tone helpers
-const playTone = async (frequency, durationMs = 150, type = 'sine') => {
+const playTone = (frequency, durationMs = 150, type = 'sine') => {
   if (isMuted) return;
   try {
-    // Generate clean audio tone using Expo AV Sound or Web Audio API fallback
-    if (typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext)) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    // Check for Web Audio API context safely
+    const AudioCtx =
+      typeof window !== 'undefined' &&
+      (window.AudioContext || window.webkitAudioContext);
+
+    if (AudioCtx) {
       const ctx = new AudioCtx();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = type;
       osc.frequency.setValueAtTime(frequency, ctx.currentTime);
-      gain.gain.setValueAtTime(0.15, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationMs / 1000);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        ctx.currentTime + durationMs / 1000
+      );
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + durationMs / 1000);
     }
   } catch (e) {
-    // Fallback silent handle
+    // Silent fallback to prevent any runtime crash on mobile runtime
   }
 };
 
@@ -37,54 +43,55 @@ export const SoundManager = {
   },
 
   playDiceRoll: () => {
-    if (isMuted) return;
-    // Rapid pitch sequence simulating rolling dice
-    playTone(320, 60, 'square');
-    setTimeout(() => playTone(450, 60, 'square'), 70);
-    setTimeout(() => playTone(380, 80, 'square'), 140);
+    try {
+      playTone(320, 60, 'square');
+      setTimeout(() => playTone(450, 60, 'square'), 70);
+      setTimeout(() => playTone(380, 80, 'square'), 140);
+    } catch (e) {}
   },
 
   playStep: () => {
-    if (isMuted) return;
-    playTone(580, 40, 'triangle');
+    try {
+      playTone(580, 40, 'triangle');
+    } catch (e) {}
   },
 
   playCash: () => {
-    if (isMuted) return;
-    // High coin chime double tone
-    playTone(987.77, 100, 'sine'); // B5
-    setTimeout(() => playTone(1318.51, 180, 'sine'), 90); // E6
+    try {
+      playTone(987.77, 100, 'sine');
+      setTimeout(() => playTone(1318.51, 180, 'sine'), 90);
+    } catch (e) {}
   },
 
   playBuild: () => {
-    if (isMuted) return;
-    // Hammer impact sounds
-    playTone(220, 70, 'sawtooth');
-    setTimeout(() => playTone(330, 90, 'sawtooth'), 80);
+    try {
+      playTone(220, 70, 'sawtooth');
+      setTimeout(() => playTone(330, 90, 'sawtooth'), 80);
+    } catch (e) {}
   },
 
   playFine: () => {
-    if (isMuted) return;
-    // Warning low double tone
-    playTone(200, 150, 'sawtooth');
-    setTimeout(() => playTone(150, 200, 'sawtooth'), 120);
+    try {
+      playTone(200, 150, 'sawtooth');
+      setTimeout(() => playTone(150, 200, 'sawtooth'), 120);
+    } catch (e) {}
   },
 
   playOrigin: () => {
-    if (isMuted) return;
-    // Arpeggio fanfare
-    playTone(523.25, 100, 'sine'); // C5
-    setTimeout(() => playTone(659.25, 100, 'sine'), 100); // E5
-    setTimeout(() => playTone(783.99, 100, 'sine'), 200); // G5
-    setTimeout(() => playTone(1046.5, 250, 'sine'), 300); // C6
+    try {
+      playTone(523.25, 100, 'sine');
+      setTimeout(() => playTone(659.25, 100, 'sine'), 100);
+      setTimeout(() => playTone(783.99, 100, 'sine'), 200);
+      setTimeout(() => playTone(1046.5, 250, 'sine'), 300);
+    } catch (e) {}
   },
 
   playVictory: () => {
-    if (isMuted) return;
-    // Celebration fanfare
-    playTone(523.25, 120, 'triangle');
-    setTimeout(() => playTone(659.25, 120, 'triangle'), 120);
-    setTimeout(() => playTone(783.99, 120, 'triangle'), 240);
-    setTimeout(() => playTone(1046.5, 400, 'triangle'), 360);
+    try {
+      playTone(523.25, 120, 'triangle');
+      setTimeout(() => playTone(659.25, 120, 'triangle'), 120);
+      setTimeout(() => playTone(783.99, 120, 'triangle'), 240);
+      setTimeout(() => playTone(1046.5, 400, 'triangle'), 360);
+    } catch (e) {}
   },
 };

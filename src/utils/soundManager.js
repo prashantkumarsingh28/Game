@@ -1,19 +1,7 @@
-import { Audio } from 'expo-av';
-
 let isMuted = false;
 let bgMusicInterval = null;
 let bgNoteIndex = 0;
 let audioContextInstance = null;
-
-// Initialize Expo Native Audio mode so audio plays even in silent mode on mobile
-try {
-  Audio.setAudioModeAsync({
-    allowsRecordingIOS: false,
-    playsInSilentModeIOS: true,
-    shouldDuckAndroid: true,
-    stayActiveInBackground: false,
-  });
-} catch (e) {}
 
 const getAudioContext = () => {
   if (typeof window === 'undefined') return null;

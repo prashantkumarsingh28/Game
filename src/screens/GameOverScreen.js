@@ -5,10 +5,13 @@ import { formatCurrency } from '../utils/currency';
 import { PLAYER_CONFIGS, GAME_COLORS } from '../styles/theme';
 import PlayerToken from '../components/PlayerToken';
 
-export default function GameOverScreen({ players, board, onPlayAgain }) {
+export default function GameOverScreen({ players = [], board = [], onPlayAgain }) {
+  const safePlayers = Array.isArray(players) ? players : [];
+  const safeBoard = Array.isArray(board) ? board : [];
+
   // Calculate net worth for each player
-  const playerStats = players.map((player) => {
-    const ownedCityObjects = board.filter((s) => s.ownerId === player.id);
+  const playerStats = safePlayers.map((player) => {
+    const ownedCityObjects = safeBoard.filter((s) => s && s.ownerId === player.id);
     const citiesValue = ownedCityObjects.reduce(
       (sum, c) => sum + (c.purchasePrice || 0),
       0
@@ -21,12 +24,12 @@ export default function GameOverScreen({ players, board, onPlayAgain }) {
       return sum + cost;
     }, 0);
 
-    const netWorth = player.cash + citiesValue + houseValue - player.loan;
+    const netWorth = (player.cash || 0) + citiesValue + houseValue - (player.loan || 0);
 
     return {
       ...player,
       citiesCount: ownedCityObjects.length,
-      houseCount: ownedCityObjects.reduce((sum, c) => sum + c.houseLevel, 0),
+      houseCount: ownedCityObjects.reduce((sum, c) => sum + (c.houseLevel || 0), 0),
       netWorth,
     };
   });
@@ -34,7 +37,15 @@ export default function GameOverScreen({ players, board, onPlayAgain }) {
   // Sort by net worth descending
   playerStats.sort((a, b) => b.netWorth - a.netWorth);
 
-  const winner = playerStats[0];
+  const winner = playerStats[0] || {
+    id: 1,
+    name: 'Player 1',
+    netWorth: 0,
+    cash: 0,
+    loan: 0,
+    citiesCount: 0,
+    houseCount: 0,
+  };
   const winnerConfig =
     PLAYER_CONFIGS.find((p) => p.id === winner.id) || PLAYER_CONFIGS[0];
 

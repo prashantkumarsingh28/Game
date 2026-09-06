@@ -4,6 +4,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { PLAYER_CONFIGS } from '../styles/theme';
 
 export default function PlayerToken({ player, size = 20 }) {
+  if (!player) return null;
   const config = PLAYER_CONFIGS.find((p) => p.id === player.id) || PLAYER_CONFIGS[0];
 
   return (

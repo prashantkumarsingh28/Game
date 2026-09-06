@@ -59,7 +59,7 @@ export default function PlayerPanel({ players, currentPlayerIndex }) {
               <View style={styles.statItem}>
                 <Text style={styles.statLabel}>Cities</Text>
                 <Text style={styles.statValue}>
-                  {player.citiesOwned.length}
+                  {(player.citiesOwned || []).length}
                 </Text>
               </View>
 

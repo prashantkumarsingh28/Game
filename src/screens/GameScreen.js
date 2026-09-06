@@ -69,10 +69,20 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
     return () => clearInterval(timer);
   }, [timerMinutes, secondsLeft, players, board]);
 
-  const currentPlayer = players[currentPlayerIndex];
-  const playerConfig = currentPlayer
-    ? PLAYER_CONFIGS.find((p) => p.id === currentPlayer.id) || PLAYER_CONFIGS[0]
-    : PLAYER_CONFIGS[0];
+  const safePlayers = Array.isArray(players) && players.length > 0 ? players : initialPlayers || [];
+  const currentPlayer = safePlayers[currentPlayerIndex] || safePlayers[0] || {
+    id: 1,
+    name: 'Player 1',
+    color: '#FF3B30',
+    cash: 10000,
+    loan: 0,
+    position: 0,
+    citiesOwned: [],
+    citiesPurchasedThisRound: 0,
+    roundCount: 1,
+  };
+  const playerConfig =
+    PLAYER_CONFIGS.find((p) => p.id === currentPlayer.id) || PLAYER_CONFIGS[0];
 
   const nextTurn = () => {
     setActiveSpace(null);

@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { generateBoard } from '../game/boardGenerator';
-import { BOARD_SIZE, checkPassedOrigin } from '../game/gameRules';
+import { BOARD_SIZE } from '../game/gameRules';
 import { getRentAmount } from '../game/rentSystem';
 import { processDeficitLoan, processOriginLoanRepayment } from '../game/loanSystem';
 import { getHouseUpgradeCost } from '../game/houseSystem';
 import { PLAYER_CONFIGS, GAME_COLORS } from '../styles/theme';
 import { formatCurrency } from '../utils/currency';
+import { SoundManager } from '../utils/soundManager';
 
 import Board from '../components/Board';
 import Dice from '../components/Dice';
@@ -17,13 +18,17 @@ import BuyCityModal from '../components/ActionModals/BuyCityModal';
 import MarketModal from '../components/ActionModals/MarketModal';
 import TransactionModal from '../components/ActionModals/TransactionModal';
 
-export default function GameScreen({ initialPlayers, onGameOver }) {
+export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOver }) {
   const [board, setBoard] = useState([]);
   const [players, setPlayers] = useState(initialPlayers);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [diceValue, setDiceValue] = useState(1);
   const [isMoving, setIsMoving] = useState(false);
   const [activeSpace, setActiveSpace] = useState(null);
+  const [isMuted, setIsMuted] = useState(false);
+
+  // Countdown timer state (in seconds)
+  const [secondsLeft, setSecondsLeft] = useState(timerMinutes * 60);
 
   // Modals state
   const [buyModalVisible, setBuyModalVisible] = useState(false);
@@ -36,38 +41,56 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
     color: '#3B82F6',
   });
 
-  // Initialize randomized board on game start
+  // Initialize board
   useEffect(() => {
     const newBoard = generateBoard();
     setBoard(newBoard);
   }, []);
+
+  // Timer Countdown Effect
+  useEffect(() => {
+    if (timerMinutes <= 0 || secondsLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          // Time is UP -> Trigger Game Over
+          setTimeout(() => {
+            SoundManager.playVictory();
+            onGameOver(players, board);
+          }, 500);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timerMinutes, secondsLeft, players, board]);
 
   const currentPlayer = players[currentPlayerIndex];
   const playerConfig = currentPlayer
     ? PLAYER_CONFIGS.find((p) => p.id === currentPlayer.id) || PLAYER_CONFIGS[0]
     : PLAYER_CONFIGS[0];
 
-  // Advance to next player turn
   const nextTurn = () => {
     setActiveSpace(null);
     setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
   };
 
-  // Helper to update specific player state
   const updatePlayer = (playerId, updateFn) => {
     setPlayers((prevPlayers) =>
       prevPlayers.map((p) => (p.id === playerId ? updateFn(p) : p))
     );
   };
 
-  // Helper to update specific board space
   const updateBoardSpace = (spaceId, updateFn) => {
     setBoard((prevBoard) =>
       prevBoard.map((s) => (s.id === spaceId ? updateFn(s) : s))
     );
   };
 
-  // Show notification modal
   const notify = (title, message, icon = 'info-circle', color = '#3B82F6') => {
     setTransactionModal({
       visible: true,
@@ -78,10 +101,16 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
     });
   };
 
-  // Handle step-by-step movement animation
+  const handleToggleMute = () => {
+    const muted = SoundManager.toggleMute();
+    setIsMuted(muted);
+  };
+
+  // Accelerated, smooth step movement handler (80ms interval)
   const handleRollDice = (rolledVal) => {
     if (isMoving || !currentPlayer) return;
 
+    SoundManager.playDiceRoll();
     setDiceValue(rolledVal);
     setIsMoving(true);
 
@@ -92,12 +121,14 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
       currPos = (currPos + 1) % BOARD_SIZE;
       const passedOrigin = currPos === 0;
 
-      // Update current player position
+      // Play step tick sound
+      SoundManager.playStep();
+
       updatePlayer(currentPlayer.id, (p) => {
         let updatedPlayer = { ...p, position: currPos };
 
-        // Handle Origin Crossing Bonus & Loan Repayment
         if (passedOrigin) {
+          SoundManager.playOrigin();
           const bonusResult = processOriginLoanRepayment(
             updatedPlayer.cash,
             updatedPlayer.loan,
@@ -107,25 +138,25 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
           updatedPlayer.cash = bonusResult.newCash;
           updatedPlayer.loan = bonusResult.newLoan;
           updatedPlayer.roundCount += 1;
-          updatedPlayer.citiesPurchasedThisRound = 0; // Reset city buy limit per round
+          updatedPlayer.citiesPurchasedThisRound = 0;
 
           setTimeout(() => {
             if (bonusResult.amountRepaid > 0) {
               notify(
                 'ROUND BONUS & LOAN REPAYMENT',
-                `Round ${updatedPlayer.roundCount} completed! ₹1,500 bonus used toward bank loan. Repaid: ${formatCurrency(bonusResult.amountRepaid)}. Remaining Loan: ${formatCurrency(bonusResult.newLoan)}.`,
+                `Round ${updatedPlayer.roundCount} completed! ₹1,500 bonus used toward bank loan.\nRepaid: ${formatCurrency(bonusResult.amountRepaid)}\nRemaining Loan: ${formatCurrency(bonusResult.newLoan)}`,
                 'hand-holding-usd',
-                '#10B981'
+                '#34C759'
               );
             } else {
               notify(
                 'ROUND COMPLETED',
-                `Round ${updatedPlayer.roundCount} completed! ₹1,500 bonus added to your cash balance.`,
+                `Round ${updatedPlayer.roundCount} completed! ₹1,500 bonus added to your cash.`,
                 'coins',
-                '#10B981'
+                '#34C759'
               );
             }
-          }, 300);
+          }, 200);
         }
 
         return updatedPlayer;
@@ -136,13 +167,11 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
       if (stepsRemaining === 0) {
         clearInterval(interval);
         setIsMoving(false);
-        // Process final destination box action
         processDestinationSpace(currPos);
       }
-    }, 180);
+    }, 80); // Fast 80ms step speed for maximum smoothness
   };
 
-  // Process landed space action
   const processDestinationSpace = (position) => {
     const space = board.find((s) => s.id === position);
     if (!space) return;
@@ -159,12 +188,12 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
         handleFineSpace(space);
         break;
       case 'ORIGIN':
-        // Origin landing handled by pass check, notify if not already shown
+        SoundManager.playOrigin();
         notify(
           'LANDED ON ORIGIN',
           'You landed directly on Origin! Round completed and ₹1,500 bonus collected.',
           'flag-checkered',
-          '#10B981'
+          '#34C759'
         );
         break;
       case 'SAFE':
@@ -174,27 +203,23 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
           'SAFE POINT',
           'Nothing happens. Take a rest and enjoy safe space!',
           'shield-alt',
-          '#8B5CF6'
+          '#C084FC'
         );
         break;
     }
   };
 
-  // City space action
   const handleCitySpace = (space) => {
     if (space.ownerId === null) {
-      // Unowned city -> trigger Buy Modal
       setBuyModalVisible(true);
     } else if (space.ownerId === currentPlayer.id) {
-      // Own city
       notify(
         'YOUR CITY',
         `Welcome back to ${space.name}! You own this property.`,
         'building',
-        '#3B82F6'
+        '#007AFF'
       );
     } else {
-      // Rival city -> Pay Rent
       const owner = players.find((p) => p.id === space.ownerId);
       const rentAmount = getRentAmount(space.houseLevel);
 
@@ -204,14 +229,14 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
         rentAmount
       );
 
-      // Deduct from visitor
+      SoundManager.playCash();
+
       updatePlayer(currentPlayer.id, (p) => ({
         ...p,
         cash: loanResult.newCash,
         loan: loanResult.newLoan,
       }));
 
-      // Credit to owner
       if (owner) {
         updatePlayer(owner.id, (p) => ({
           ...p,
@@ -220,28 +245,29 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
       }
 
       if (loanResult.loanTaken > 0) {
+        SoundManager.playFine();
         notify(
           'RENT PAID (BANK LOAN ISSUED)',
           `${currentPlayer.name} paid ${formatCurrency(rentAmount)} rent to ${owner.name} (Level ${space.houseLevel} house).\n\nInsufficient cash! Bank issued a loan of ${formatCurrency(loanResult.loanTaken)}.`,
           'university',
-          '#EF4444'
+          '#FF3B30'
         );
       } else {
         notify(
           'RENT PAID',
           `${currentPlayer.name} paid ${formatCurrency(rentAmount)} rent to ${owner.name} for landing on ${space.name}.`,
           'file-invoice-dollar',
-          '#F97316'
+          '#FF9500'
         );
       }
     }
   };
 
-  // City Purchase Handler
   const handleBuyCity = () => {
     if (!activeSpace || !currentPlayer) return;
 
-    // Deduct price & add city to player
+    SoundManager.playCash();
+
     updatePlayer(currentPlayer.id, (p) => ({
       ...p,
       cash: p.cash - activeSpace.purchasePrice,
@@ -249,7 +275,6 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
       citiesPurchasedThisRound: p.citiesPurchasedThisRound + 1,
     }));
 
-    // Update board space owner
     updateBoardSpace(activeSpace.id, (s) => ({
       ...s,
       ownerId: currentPlayer.id,
@@ -261,7 +286,7 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
       'CITY PURCHASED!',
       `Congratulations! ${currentPlayer.name} purchased ${activeSpace.name} for ${formatCurrency(activeSpace.purchasePrice)}.`,
       'shopping-cart',
-      '#10B981'
+      '#34C759'
     );
   };
 
@@ -270,23 +295,21 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
     nextTurn();
   };
 
-  // Market Space Action
   const handleMarketSpace = () => {
     setMarketModalVisible(true);
   };
 
-  // Build House Handler
   const handleBuildHouse = (selectedCity) => {
     const cost = getHouseUpgradeCost(selectedCity.houseLevel);
     if (!cost || currentPlayer.cash < cost) return;
 
-    // Deduct cost from player
+    SoundManager.playBuild();
+
     updatePlayer(currentPlayer.id, (p) => ({
       ...p,
       cash: p.cash - cost,
     }));
 
-    // Upgrade house level on city
     updateBoardSpace(selectedCity.id, (s) => ({
       ...s,
       houseLevel: s.houseLevel + 1,
@@ -298,7 +321,7 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
       'HOUSE BUILT!',
       `House level on ${selectedCity.name} upgraded to Level ${selectedCity.houseLevel + 1} for ${formatCurrency(cost)}! Rent is now ${formatCurrency(getRentAmount(selectedCity.houseLevel + 1))}.`,
       'home',
-      '#F59E0B'
+      '#FF9500'
     );
   };
 
@@ -307,9 +330,9 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
     nextTurn();
   };
 
-  // Fine Space Action
   const handleFineSpace = (space) => {
     const fineAmount = space.fineAmount || 1000;
+    SoundManager.playFine();
 
     const loanResult = processDeficitLoan(
       currentPlayer.cash,
@@ -326,16 +349,16 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
     if (loanResult.loanTaken > 0) {
       notify(
         'FINE PAID (BANK LOAN ISSUED)',
-        `Fine of ${formatCurrency(fineAmount)} incurred!\n\nInsufficient cash balance. Bank issued a loan of ${formatCurrency(loanResult.loanTaken)}.`,
+        `Fine of ${formatCurrency(fineAmount)} incurred!\n\nInsufficient cash. Bank issued a loan of ${formatCurrency(loanResult.loanTaken)}.`,
         'gavel',
-        '#EF4444'
+        '#FF3B30'
       );
     } else {
       notify(
         'FINE DEDUCTED',
         `Fine of ${formatCurrency(fineAmount)} has been deducted from ${currentPlayer.name}'s balance.`,
         'gavel',
-        '#EF4444'
+        '#FF3B30'
       );
     }
   };
@@ -343,6 +366,12 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
   const handleCloseTransactionModal = () => {
     setTransactionModal((prev) => ({ ...prev, visible: false }));
     nextTurn();
+  };
+
+  const formatTimer = (totalSecs) => {
+    const m = Math.floor(totalSecs / 60);
+    const s = totalSecs % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
   const ownedCitiesForCurrentPlayer = board.filter(
@@ -354,27 +383,73 @@ export default function GameScreen({ initialPlayers, onGameOver }) {
       {/* Header Bar */}
       <View style={styles.headerBar}>
         <View style={styles.logoRow}>
-          <FontAwesome5 name="city" size={16} color="#F59E0B" />
+          <FontAwesome5 name="city" size={16} color="#FF9500" />
           <Text style={styles.headerTitle}>BUSINESS MONOPOLY</Text>
         </View>
 
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={styles.endGameBtn}
-          onPress={() => {
-            Alert.alert(
-              'End Game',
-              'Are you sure you want to finish the game and see the winner?',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'End Game', style: 'destructive', onPress: () => onGameOver(players, board) },
-              ]
-            );
-          }}
-        >
-          <FontAwesome5 name="flag-checkered" size={12} color="#EF4444" />
-          <Text style={styles.endGameText}>END GAME</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRightRow}>
+          {/* Timer Display */}
+          {timerMinutes > 0 && (
+            <View
+              style={[
+                styles.timerBadge,
+                secondsLeft <= 60 && styles.lowTimerBadge,
+              ]}
+            >
+              <FontAwesome5
+                name="clock"
+                size={11}
+                color={secondsLeft <= 60 ? '#FF3B30' : '#FF9500'}
+              />
+              <Text
+                style={[
+                  styles.timerText,
+                  secondsLeft <= 60 && styles.lowTimerText,
+                ]}
+              >
+                {formatTimer(secondsLeft)}
+              </Text>
+            </View>
+          )}
+
+          {/* Sound Toggle */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={styles.iconBtn}
+            onPress={handleToggleMute}
+          >
+            <FontAwesome5
+              name={isMuted ? 'volume-mute' : 'volume-up'}
+              size={14}
+              color={isMuted ? '#94A3B8' : '#34C759'}
+            />
+          </TouchableOpacity>
+
+          {/* End Game */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={styles.endGameBtn}
+            onPress={() => {
+              Alert.alert(
+                'End Game',
+                'Finish game and calculate winner now?',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'End Game',
+                    style: 'destructive',
+                    onPress: () => {
+                      SoundManager.playVictory();
+                      onGameOver(players, board);
+                    },
+                  },
+                ]
+              );
+            }}
+          >
+            <FontAwesome5 name="flag-checkered" size={11} color="#FF3B30" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Main Board View */}
@@ -451,16 +526,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: GAME_COLORS.background,
     justifyContent: 'space-between',
-    paddingTop: 40,
-    paddingBottom: 10,
-    paddingHorizontal: 8,
+    paddingTop: 36,
+    paddingBottom: 8,
+    paddingHorizontal: 6,
   },
   headerBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    marginBottom: 6,
+    paddingHorizontal: 6,
+    marginBottom: 4,
   },
   logoRow: {
     flexDirection: 'row',
@@ -468,26 +543,52 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   headerTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '900',
     color: '#F8FAFC',
     letterSpacing: 1,
   },
-  endGameBtn: {
+  headerRightRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#331B1B',
-    borderColor: '#EF4444',
+    gap: 6,
+  },
+  timerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1C2541',
+    borderColor: '#FF9500',
     borderWidth: 1,
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
     gap: 4,
   },
-  endGameText: {
-    color: '#F87171',
-    fontSize: 10,
-    fontWeight: '800',
+  lowTimerBadge: {
+    borderColor: '#FF3B30',
+    backgroundColor: '#381414',
+  },
+  timerText: {
+    color: '#FF9500',
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  lowTimerText: {
+    color: '#FF3B30',
+  },
+  iconBtn: {
+    backgroundColor: '#1C2541',
+    borderColor: '#334155',
+    borderWidth: 1,
+    padding: 6,
+    borderRadius: 10,
+  },
+  endGameBtn: {
+    backgroundColor: '#381414',
+    borderColor: '#FF3B30',
+    borderWidth: 1,
+    padding: 6,
+    borderRadius: 10,
   },
   centerControlContainer: {
     alignItems: 'center',

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, SafeAreaView, StatusBar } from 'react-native';
+import { StyleSheet, SafeAreaView } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 
 import WelcomeScreen from './src/screens/WelcomeScreen';
@@ -12,14 +12,16 @@ import { GAME_COLORS } from './src/styles/theme';
 export default function App() {
   const [screen, setScreen] = useState('WELCOME');
   const [players, setPlayers] = useState([]);
+  const [timerMinutes, setTimerMinutes] = useState(15);
   const [gameOverData, setGameOverData] = useState(null);
 
   const handleStartSetup = () => {
     setScreen('SETUP_PLAYERS');
   };
 
-  const handlePlayersConfigured = (configuredPlayers) => {
+  const handlePlayersConfigured = (configuredPlayers, selectedTimer) => {
     setPlayers(configuredPlayers);
+    setTimerMinutes(selectedTimer);
     setScreen('SETUP_MONEY');
   };
 
@@ -61,6 +63,7 @@ export default function App() {
       {screen === 'GAME' && (
         <GameScreen
           initialPlayers={players}
+          timerMinutes={timerMinutes}
           onGameOver={handleGameOver}
         />
       )}

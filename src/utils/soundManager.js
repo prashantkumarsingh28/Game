@@ -8,26 +8,29 @@ let isMuted = false;
 const playTone = (frequency, durationMs = 150, type = 'sine') => {
   if (isMuted) return;
   try {
-    // Check for Web Audio API context safely
-    const AudioCtx =
+    if (
       typeof window !== 'undefined' &&
-      (window.AudioContext || window.webkitAudioContext);
-
-    if (AudioCtx) {
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(frequency, ctx.currentTime);
-      gain.gain.setValueAtTime(0.12, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(
-        0.001,
-        ctx.currentTime + durationMs / 1000
-      );
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + durationMs / 1000);
+      window !== null &&
+      (typeof window.AudioContext !== 'undefined' ||
+        typeof window.webkitAudioContext !== 'undefined')
+    ) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(frequency, ctx.currentTime);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(
+          0.001,
+          ctx.currentTime + durationMs / 1000
+        );
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + durationMs / 1000);
+      }
     }
   } catch (e) {
     // Silent fallback to prevent any runtime crash on mobile runtime

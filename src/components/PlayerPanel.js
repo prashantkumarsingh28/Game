@@ -18,9 +18,9 @@ export default function PlayerPanel({ players, currentPlayerIndex }) {
             style={[
               styles.playerCard,
               {
-                borderColor: isCurrent ? config.color : '#334155',
+                borderColor: isCurrent ? config.color : '#CBD5E1',
                 borderWidth: isCurrent ? 2 : 1,
-                backgroundColor: isCurrent ? '#1E293B' : '#0F172A',
+                backgroundColor: isCurrent ? '#FFFFFF' : '#F8FAFC',
               },
             ]}
           >
@@ -30,7 +30,7 @@ export default function PlayerPanel({ players, currentPlayerIndex }) {
               <Text
                 style={[
                   styles.playerName,
-                  { color: isCurrent ? '#F8FAFC' : '#94A3B8' },
+                  { color: isCurrent ? '#0F172A' : '#475569' },
                 ]}
                 numberOfLines={1}
               >
@@ -82,14 +82,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#F1F5F9',
   },
   playerCard: {
     width: '48.5%',
     borderRadius: 8,
     padding: 6,
     marginBottom: 6,
-    elevation: 3,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   headerRow: {
     flexDirection: 'row',
@@ -106,7 +110,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#1E293B',
+    backgroundColor: '#E2E8F0',
     borderRadius: 6,
     paddingHorizontal: 4,
     paddingVertical: 3,
@@ -116,23 +120,23 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 7,
-    color: '#94A3B8',
+    color: '#475569',
     textTransform: 'uppercase',
     fontWeight: '700',
   },
   statValue: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: '#0F172A',
   },
   cashValue: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#10B981',
+    color: '#059669',
   },
   loanValue: {
     fontSize: 10,
     fontWeight: '900',
-    color: '#EF4444',
+    color: '#DC2626',
   },
 });

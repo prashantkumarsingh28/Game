@@ -148,8 +148,8 @@ const styles = StyleSheet.create({
   },
   cityName: {
     fontSize: 9,
-    fontWeight: '700',
-    color: '#F8FAFC',
+    fontWeight: '800',
+    color: '#0F172A',
     textAlign: 'center',
   },
   houseRow: {
@@ -162,8 +162,8 @@ const styles = StyleSheet.create({
   },
   cityPrice: {
     fontSize: 8,
-    fontWeight: '600',
-    color: '#CBD5E1',
+    fontWeight: '700',
+    color: '#475569',
     marginTop: 1,
   },
   cornerContent: {
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   },
   cornerSub: {
     fontSize: 7,
-    color: '#34D399',
+    color: '#ECFDF5',
     fontWeight: '700',
   },
   specialContent: {
@@ -188,12 +188,12 @@ const styles = StyleSheet.create({
   specialTitle: {
     fontSize: 8,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: '#1E293B',
     textAlign: 'center',
   },
   specialSub: {
     fontSize: 7,
-    color: '#F87171',
+    color: '#DC2626',
     fontWeight: '700',
   },
   ownerBadge: {

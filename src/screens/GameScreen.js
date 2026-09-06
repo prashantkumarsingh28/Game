@@ -41,10 +41,14 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
     color: '#3B82F6',
   });
 
-  // Initialize board
+  // Initialize board & background music
   useEffect(() => {
     const newBoard = generateBoard();
     setBoard(newBoard);
+    SoundManager.startBackgroundMusic();
+    return () => {
+      SoundManager.stopBackgroundMusic();
+    };
   }, []);
 
   // Timer Countdown Effect
@@ -555,7 +559,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 14,
     fontWeight: '900',
-    color: '#F8FAFC',
+    color: '#0F172A',
     letterSpacing: 1,
   },
   headerRightRow: {
@@ -566,8 +570,8 @@ const styles = StyleSheet.create({
   timerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1C2541',
-    borderColor: '#FF9500',
+    backgroundColor: '#FEF3C7',
+    borderColor: '#D97706',
     borderWidth: 1,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -575,30 +579,32 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   lowTimerBadge: {
-    borderColor: '#FF3B30',
-    backgroundColor: '#381414',
+    borderColor: '#EF4444',
+    backgroundColor: '#FEE2E2',
   },
   timerText: {
-    color: '#FF9500',
+    color: '#D97706',
     fontSize: 11,
     fontWeight: '900',
   },
   lowTimerText: {
-    color: '#FF3B30',
+    color: '#EF4444',
   },
   iconBtn: {
-    backgroundColor: '#1C2541',
-    borderColor: '#334155',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#CBD5E1',
     borderWidth: 1,
     padding: 6,
     borderRadius: 10,
+    elevation: 1,
   },
   endGameBtn: {
-    backgroundColor: '#381414',
-    borderColor: '#FF3B30',
+    backgroundColor: '#FEE2E2',
+    borderColor: '#EF4444',
     borderWidth: 1,
     padding: 6,
     borderRadius: 10,
+    elevation: 1,
   },
   centerControlContainer: {
     alignItems: 'center',
@@ -621,9 +627,9 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   roundTrackerText: {
-    color: '#94A3B8',
-    fontSize: 9,
-    fontWeight: '700',
+    color: '#475569',
+    fontSize: 10,
+    fontWeight: '800',
     marginTop: 2,
   },
 });

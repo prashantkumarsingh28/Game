@@ -44,10 +44,10 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 320,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#CBD5E1',
     overflow: 'hidden',
     elevation: 10,
   },
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 14,
-    color: '#F8FAFC',
+    color: '#0F172A',
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 20,

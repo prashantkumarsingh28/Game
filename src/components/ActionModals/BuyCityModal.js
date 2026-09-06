@@ -108,10 +108,10 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 340,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#CBD5E1',
     overflow: 'hidden',
     elevation: 10,
   },
@@ -135,15 +135,17 @@ const styles = StyleSheet.create({
   cityName: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#F8FAFC',
+    color: '#0F172A',
     marginBottom: 16,
   },
   infoBox: {
     width: '100%',
-    backgroundColor: '#0F172A',
+    backgroundColor: '#F8FAFC',
     borderRadius: 10,
     padding: 12,
     marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   infoRow: {
     flexDirection: 'row',
@@ -152,17 +154,17 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   infoLabel: {
-    color: '#94A3B8',
+    color: '#475569',
     fontSize: 13,
     fontWeight: '600',
   },
   infoValue: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 14,
     fontWeight: '800',
   },
   priceValue: {
-    color: '#F59E0B',
+    color: '#D97706',
     fontSize: 15,
     fontWeight: '900',
   },

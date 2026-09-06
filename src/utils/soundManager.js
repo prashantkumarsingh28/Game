@@ -4,6 +4,15 @@
  */
 
 let isMuted = false;
+let bgMusicInterval = null;
+let bgNoteIndex = 0;
+
+const ambientChords = [
+  [261.63, 329.63, 392.00], // C Major
+  [220.00, 261.63, 329.63], // A Minor
+  [174.61, 220.00, 261.63], // F Major
+  [196.00, 246.94, 293.66], // G Major
+];
 
 const playTone = (frequency, durationMs = 150, type = 'sine') => {
   if (isMuted) return;
@@ -21,7 +30,7 @@ const playTone = (frequency, durationMs = 150, type = 'sine') => {
         const gain = ctx.createGain();
         osc.type = type;
         osc.frequency.setValueAtTime(frequency, ctx.currentTime);
-        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(
           0.001,
           ctx.currentTime + durationMs / 1000
@@ -42,7 +51,33 @@ export const SoundManager = {
 
   toggleMute: () => {
     isMuted = !isMuted;
+    if (isMuted && bgMusicInterval) {
+      // Temporarily pause loop
+    }
     return isMuted;
+  },
+
+  startBackgroundMusic: () => {
+    if (bgMusicInterval) return;
+    bgMusicInterval = setInterval(() => {
+      if (isMuted) return;
+      try {
+        const chord = ambientChords[bgNoteIndex % ambientChords.length];
+        bgNoteIndex++;
+        chord.forEach((freq, idx) => {
+          setTimeout(() => {
+            playTone(freq, 450, 'sine');
+          }, idx * 140);
+        });
+      } catch (e) {}
+    }, 3200);
+  },
+
+  stopBackgroundMusic: () => {
+    if (bgMusicInterval) {
+      clearInterval(bgMusicInterval);
+      bgMusicInterval = null;
+    }
   },
 
   playDiceRoll: () => {

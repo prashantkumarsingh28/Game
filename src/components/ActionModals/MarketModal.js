@@ -156,10 +156,10 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 350,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#CBD5E1',
     overflow: 'hidden',
     maxHeight: 520,
   },
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: '#475569',
     textAlign: 'center',
     marginBottom: 12,
   },
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyText: {
-    color: '#CBD5E1',
+    color: '#475569',
     textAlign: 'center',
     fontSize: 13,
     paddingHorizontal: 16,
@@ -202,16 +202,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   cityItem: {
-    backgroundColor: '#0F172A',
+    backgroundColor: '#F8FAFC',
     borderRadius: 10,
     padding: 10,
     marginBottom: 8,
     borderWidth: 1.5,
-    borderColor: '#334155',
+    borderColor: '#CBD5E1',
   },
   selectedCityItem: {
-    borderColor: '#F97316',
-    backgroundColor: '#271911',
+    borderColor: '#EA580C',
+    backgroundColor: '#FFEDD5',
   },
   maxCityItem: {
     opacity: 0.6,
@@ -223,18 +223,18 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   cityItemName: {
-    color: '#F8FAFC',
+    color: '#0F172A',
     fontSize: 15,
     fontWeight: '800',
   },
   levelBadge: {
-    backgroundColor: '#334155',
+    backgroundColor: '#E2E8F0',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
   },
   levelText: {
-    color: '#F59E0B',
+    color: '#D97706',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -244,11 +244,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   detailText: {
-    color: '#94A3B8',
+    color: '#475569',
     fontSize: 11,
   },
   upgradeCostText: {
-    color: '#10B981',
+    color: '#059669',
     fontSize: 11,
     fontWeight: '700',
   },

@@ -116,6 +116,7 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
 
     let stepsRemaining = rolledVal;
     let currPos = currentPlayer.position;
+    let activePlayerState = { ...currentPlayer };
 
     const interval = setInterval(() => {
       currPos = (currPos + 1) % BOARD_SIZE;
@@ -124,68 +125,67 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
       // Play step tick sound
       SoundManager.playStep();
 
-      updatePlayer(currentPlayer.id, (p) => {
-        let updatedPlayer = { ...p, position: currPos };
+      if (passedOrigin) {
+        SoundManager.playOrigin();
+        const bonusResult = processOriginLoanRepayment(
+          activePlayerState.cash,
+          activePlayerState.loan,
+          1500
+        );
 
-        if (passedOrigin) {
-          SoundManager.playOrigin();
-          const bonusResult = processOriginLoanRepayment(
-            updatedPlayer.cash,
-            updatedPlayer.loan,
-            1500
-          );
+        activePlayerState.cash = bonusResult.newCash;
+        activePlayerState.loan = bonusResult.newLoan;
+        activePlayerState.roundCount += 1;
+        activePlayerState.citiesPurchasedThisRound = 0;
 
-          updatedPlayer.cash = bonusResult.newCash;
-          updatedPlayer.loan = bonusResult.newLoan;
-          updatedPlayer.roundCount += 1;
-          updatedPlayer.citiesPurchasedThisRound = 0;
+        setTimeout(() => {
+          if (bonusResult.amountRepaid > 0) {
+            notify(
+              'ROUND BONUS & LOAN REPAYMENT',
+              `Round ${activePlayerState.roundCount} completed! ₹1,500 bonus used toward bank loan.\nRepaid: ${formatCurrency(bonusResult.amountRepaid)}\nRemaining Loan: ${formatCurrency(bonusResult.newLoan)}`,
+              'hand-holding-usd',
+              '#34C759'
+            );
+          } else {
+            notify(
+              'ROUND COMPLETED',
+              `Round ${activePlayerState.roundCount} completed! ₹1,500 bonus added to your cash.`,
+              'coins',
+              '#34C759'
+            );
+          }
+        }, 200);
+      }
 
-          setTimeout(() => {
-            if (bonusResult.amountRepaid > 0) {
-              notify(
-                'ROUND BONUS & LOAN REPAYMENT',
-                `Round ${updatedPlayer.roundCount} completed! ₹1,500 bonus used toward bank loan.\nRepaid: ${formatCurrency(bonusResult.amountRepaid)}\nRemaining Loan: ${formatCurrency(bonusResult.newLoan)}`,
-                'hand-holding-usd',
-                '#34C759'
-              );
-            } else {
-              notify(
-                'ROUND COMPLETED',
-                `Round ${updatedPlayer.roundCount} completed! ₹1,500 bonus added to your cash.`,
-                'coins',
-                '#34C759'
-              );
-            }
-          }, 200);
-        }
+      activePlayerState.position = currPos;
+      const stepPlayerObj = { ...activePlayerState };
 
-        return updatedPlayer;
-      });
+      updatePlayer(currentPlayer.id, () => stepPlayerObj);
 
       stepsRemaining--;
 
       if (stepsRemaining === 0) {
         clearInterval(interval);
         setIsMoving(false);
-        processDestinationSpace(currPos);
+        processDestinationSpace(currPos, stepPlayerObj);
       }
     }, 80); // Fast 80ms step speed for maximum smoothness
   };
 
-  const processDestinationSpace = (position) => {
+  const processDestinationSpace = (position, actingPlayer = currentPlayer) => {
     const space = board.find((s) => s.id === position);
     if (!space) return;
     setActiveSpace(space);
 
     switch (space.type) {
       case 'CITY':
-        handleCitySpace(space);
+        handleCitySpace(space, actingPlayer);
         break;
       case 'MARKET':
         handleMarketSpace();
         break;
       case 'FINE':
-        handleFineSpace(space);
+        handleFineSpace(space, actingPlayer);
         break;
       case 'ORIGIN':
         SoundManager.playOrigin();
@@ -209,10 +209,10 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
     }
   };
 
-  const handleCitySpace = (space) => {
+  const handleCitySpace = (space, actingPlayer = currentPlayer) => {
     if (space.ownerId === null) {
       setBuyModalVisible(true);
-    } else if (space.ownerId === currentPlayer.id) {
+    } else if (space.ownerId === actingPlayer.id) {
       notify(
         'YOUR CITY',
         `Welcome back to ${space.name}! You own this property.`,
@@ -224,14 +224,14 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
       const rentAmount = getRentAmount(space.houseLevel);
 
       const loanResult = processDeficitLoan(
-        currentPlayer.cash,
-        currentPlayer.loan,
+        actingPlayer.cash,
+        actingPlayer.loan,
         rentAmount
       );
 
       SoundManager.playCash();
 
-      updatePlayer(currentPlayer.id, (p) => ({
+      updatePlayer(actingPlayer.id, (p) => ({
         ...p,
         cash: loanResult.newCash,
         loan: loanResult.newLoan,
@@ -248,14 +248,14 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
         SoundManager.playFine();
         notify(
           'RENT PAID (BANK LOAN ISSUED)',
-          `${currentPlayer.name} paid ${formatCurrency(rentAmount)} rent to ${owner.name} (Level ${space.houseLevel} house).\n\nInsufficient cash! Bank issued a loan of ${formatCurrency(loanResult.loanTaken)}.`,
+          `${actingPlayer.name} paid ${formatCurrency(rentAmount)} rent to ${owner.name} (Level ${space.houseLevel} house).\n\nInsufficient cash! Bank issued a loan of ${formatCurrency(loanResult.loanTaken)}.`,
           'university',
           '#FF3B30'
         );
       } else {
         notify(
           'RENT PAID',
-          `${currentPlayer.name} paid ${formatCurrency(rentAmount)} rent to ${owner.name} for landing on ${space.name}.`,
+          `${actingPlayer.name} paid ${formatCurrency(rentAmount)} rent to ${owner.name} for landing on ${space.name}.`,
           'file-invoice-dollar',
           '#FF9500'
         );
@@ -330,17 +330,17 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
     nextTurn();
   };
 
-  const handleFineSpace = (space) => {
+  const handleFineSpace = (space, actingPlayer = currentPlayer) => {
     const fineAmount = space.fineAmount || 1000;
     SoundManager.playFine();
 
     const loanResult = processDeficitLoan(
-      currentPlayer.cash,
-      currentPlayer.loan,
+      actingPlayer.cash,
+      actingPlayer.loan,
       fineAmount
     );
 
-    updatePlayer(currentPlayer.id, (p) => ({
+    updatePlayer(actingPlayer.id, (p) => ({
       ...p,
       cash: loanResult.newCash,
       loan: loanResult.newLoan,
@@ -356,7 +356,7 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
     } else {
       notify(
         'FINE DEDUCTED',
-        `Fine of ${formatCurrency(fineAmount)} has been deducted from ${currentPlayer.name}'s balance.`,
+        `Fine of ${formatCurrency(fineAmount)} has been deducted from ${actingPlayer.name}'s balance.`,
         'gavel',
         '#FF3B30'
       );

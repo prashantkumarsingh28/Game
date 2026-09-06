@@ -50,8 +50,6 @@ export default function Board({ board, players, onSpacePress, centerContent }) {
               style={[
                 styles.gridCell,
                 {
-                  gridRowStart: gridPos.row + 1,
-                  gridColumnStart: gridPos.col + 1,
                   left: `${(gridPos.col / 7) * 100}%`,
                   top: `${(gridPos.row / 9) * 100}%`,
                   width: `${(1 / 7) * 100}%`,

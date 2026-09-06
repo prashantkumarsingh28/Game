@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { StyleSheet, SafeAreaView } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 
 import WelcomeScreen from './src/screens/WelcomeScreen';
@@ -42,40 +43,42 @@ export default function App() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ExpoStatusBar style="light" />
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <ExpoStatusBar style="light" />
 
-      {screen === 'WELCOME' && (
-        <WelcomeScreen onStart={handleStartSetup} />
-      )}
+        {screen === 'WELCOME' && (
+          <WelcomeScreen onStart={handleStartSetup} />
+        )}
 
-      {screen === 'SETUP_PLAYERS' && (
-        <PlayerSetupScreen onNext={handlePlayersConfigured} />
-      )}
+        {screen === 'SETUP_PLAYERS' && (
+          <PlayerSetupScreen onNext={handlePlayersConfigured} />
+        )}
 
-      {screen === 'SETUP_MONEY' && (
-        <StartingMoneyScreen
-          players={players}
-          onStartGame={handleStartingMoneySelected}
-        />
-      )}
+        {screen === 'SETUP_MONEY' && (
+          <StartingMoneyScreen
+            players={players}
+            onStartGame={handleStartingMoneySelected}
+          />
+        )}
 
-      {screen === 'GAME' && (
-        <GameScreen
-          initialPlayers={players}
-          timerMinutes={timerMinutes}
-          onGameOver={handleGameOver}
-        />
-      )}
+        {screen === 'GAME' && (
+          <GameScreen
+            initialPlayers={players}
+            timerMinutes={timerMinutes}
+            onGameOver={handleGameOver}
+          />
+        )}
 
-      {screen === 'GAME_OVER' && gameOverData && (
-        <GameOverScreen
-          players={gameOverData.players}
-          board={gameOverData.board}
-          onPlayAgain={handlePlayAgain}
-        />
-      )}
-    </SafeAreaView>
+        {screen === 'GAME_OVER' && gameOverData && (
+          <GameOverScreen
+            players={gameOverData.players}
+            board={gameOverData.board}
+            onPlayAgain={handlePlayAgain}
+          />
+        )}
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 

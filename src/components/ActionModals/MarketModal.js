@@ -22,6 +22,12 @@ export default function MarketModal({
 }) {
   const [selectedCityId, setSelectedCityId] = useState(null);
 
+  React.useEffect(() => {
+    if (!visible) {
+      setSelectedCityId(null);
+    }
+  }, [visible]);
+
   if (!visible || !player) return null;
 
   const playerConfig =

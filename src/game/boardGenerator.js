@@ -23,7 +23,10 @@ export const generateBoard = () => {
 
   // Helper to create city space
   const createCitySpace = (id) => {
-    const cityInfo = shuffledCities[cityIndex++];
+    const cityInfo = shuffledCities[cityIndex++] || {
+      id: `city_${id}`,
+      name: `City ${id}`,
+    };
     const price = getRandomCityPrice();
     return {
       id,

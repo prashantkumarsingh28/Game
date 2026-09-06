@@ -3,7 +3,15 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { GAME_COLORS } from '../styles/theme';
 
+import { SoundManager } from '../utils/soundManager';
+
 export default function WelcomeScreen({ onStart }) {
+  const handlePressStart = () => {
+    SoundManager.unlockAudio();
+    SoundManager.playCash();
+    onStart();
+  };
+
   return (
     <View style={styles.container}>
       {/* Background Decor */}
@@ -43,7 +51,7 @@ export default function WelcomeScreen({ onStart }) {
       <TouchableOpacity
         activeOpacity={0.8}
         style={styles.startButton}
-        onPress={onStart}
+        onPress={handlePressStart}
       >
         <FontAwesome5 name="play" size={16} color="#FFFFFF" style={{ marginRight: 10 }} />
         <Text style={styles.startButtonText}>START GAME</Text>

@@ -41,6 +41,16 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
     color: '#3B82F6',
   });
 
+  // Floating Popup Effect
+  const [floatingPopup, setFloatingPopup] = useState(null);
+
+  const triggerPopup = (text, sub, color = '#10B981', icon = 'coins') => {
+    setFloatingPopup({ text, sub, color, icon });
+    setTimeout(() => {
+      setFloatingPopup(null);
+    }, 2200);
+  };
+
   // Initialize board & background music
   useEffect(() => {
     const newBoard = generateBoard();
@@ -141,6 +151,7 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
 
       if (passedOrigin) {
         SoundManager.playOrigin();
+        triggerPopup('+₹1,500', 'ORIGIN BONUS', '#10B981', 'coins');
         const bonusResult = processOriginLoanRepayment(
           activePlayerState.cash,
           activePlayerState.loan,
@@ -244,6 +255,7 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
       );
 
       SoundManager.playCash();
+      triggerPopup(`-${formatCurrency(rentAmount)}`, 'RENT PAID', '#EF4444', 'hand-holding-usd');
 
       updatePlayer(actingPlayer.id, (p) => ({
         ...p,
@@ -281,6 +293,7 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
     if (!activeSpace || !currentPlayer) return;
 
     SoundManager.playCash();
+    triggerPopup(`-${formatCurrency(activeSpace.purchasePrice)}`, `${activeSpace.name} BOUGHT`, '#34C759', 'shopping-cart');
 
     updatePlayer(currentPlayer.id, (p) => ({
       ...p,
@@ -318,6 +331,7 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
     if (!cost || currentPlayer.cash < cost) return;
 
     SoundManager.playBuild();
+    triggerPopup(`-${formatCurrency(cost)}`, `${selectedCity.name} UPGRADED`, '#F97316', 'home');
 
     updatePlayer(currentPlayer.id, (p) => ({
       ...p,
@@ -347,6 +361,7 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
   const handleFineSpace = (space, actingPlayer = currentPlayer) => {
     const fineAmount = space.fineAmount || 1000;
     SoundManager.playFine();
+    triggerPopup(`-${formatCurrency(fineAmount)}`, 'FINE PENALTY', '#EF4444', 'gavel');
 
     const loanResult = processDeficitLoan(
       actingPlayer.cash,
@@ -481,6 +496,17 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
         }}
         centerContent={
           <View style={styles.centerControlContainer}>
+            {/* Floating Visual Effect Badge */}
+            {floatingPopup && (
+              <View style={[styles.floatingBadge, { backgroundColor: floatingPopup.color }]}>
+                <FontAwesome5 name={floatingPopup.icon} size={14} color="#FFFFFF" />
+                <View style={{ marginLeft: 6 }}>
+                  <Text style={styles.floatingBadgeText}>{floatingPopup.text}</Text>
+                  <Text style={styles.floatingBadgeSub}>{floatingPopup.sub}</Text>
+                </View>
+              </View>
+            )}
+
             {/* Current Turn Banner */}
             <View style={[styles.turnBanner, { backgroundColor: playerConfig.color }]}>
               <PlayerToken player={currentPlayer} size={16} />
@@ -493,7 +519,10 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
             <Dice
               value={diceValue}
               disabled={isMoving || buyModalVisible || marketModalVisible || transactionModal.visible}
-              onRoll={handleRollDice}
+              onRoll={(val) => {
+                SoundManager.unlockAudio();
+                handleRollDice(val);
+              }}
             />
 
             <Text style={styles.roundTrackerText}>
@@ -631,5 +660,31 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     marginTop: 2,
+  },
+  floatingBadge: {
+    position: 'absolute',
+    top: -30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+    elevation: 8,
+    zIndex: 999,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  floatingBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  floatingBadgeSub: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: '800',
+    opacity: 0.9,
   },
 });

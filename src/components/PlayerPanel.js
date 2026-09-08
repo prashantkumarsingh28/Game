@@ -18,30 +18,39 @@ export default function PlayerPanel({ players, currentPlayerIndex }) {
             style={[
               styles.playerCard,
               {
-                borderColor: isCurrent ? config.color : '#CBD5E1',
+                borderColor: isCurrent ? '#F59E0B' : 'rgba(255, 255, 255, 0.1)',
                 borderWidth: isCurrent ? 2 : 1,
-                backgroundColor: isCurrent ? '#FFFFFF' : '#F8FAFC',
+                backgroundColor: isCurrent
+                  ? 'rgba(30, 41, 59, 0.95)'
+                  : 'rgba(15, 23, 42, 0.85)',
               },
+              isCurrent && styles.activeCardGlow,
             ]}
           >
-            {/* Header: Token & Name */}
+            {/* Header: Token, Name & Active Badge */}
             <View style={styles.headerRow}>
-              <PlayerToken player={player} size={16} />
+              <PlayerToken player={player} size={16} isCurrentTurn={isCurrent} />
               <Text
                 style={[
                   styles.playerName,
-                  { color: isCurrent ? '#0F172A' : '#475569' },
+                  { color: isCurrent ? '#F59E0B' : '#F8FAFC' },
                 ]}
                 numberOfLines={1}
               >
                 {player.name}
               </Text>
+
+              {isCurrent && (
+                <View style={styles.activeBadge}>
+                  <Text style={styles.activeBadgeText}>TURN</Text>
+                </View>
+              )}
             </View>
 
-            {/* Stats Row */}
+            {/* Financial Stats Grid */}
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Cash</Text>
+                <Text style={styles.statLabel}>CASH</Text>
                 <Text style={styles.cashValue}>
                   {formatCurrency(player.cash)}
                 </Text>
@@ -49,7 +58,7 @@ export default function PlayerPanel({ players, currentPlayerIndex }) {
 
               {player.loan > 0 && (
                 <View style={styles.statItem}>
-                  <Text style={styles.statLabel}>Loan</Text>
+                  <Text style={styles.statLabel}>LOAN</Text>
                   <Text style={styles.loanValue}>
                     {formatCurrency(player.loan)}
                   </Text>
@@ -57,15 +66,15 @@ export default function PlayerPanel({ players, currentPlayerIndex }) {
               )}
 
               <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Cities</Text>
+                <Text style={styles.statLabel}>PROPS</Text>
                 <Text style={styles.statValue}>
                   {(player.citiesOwned || []).length}
                 </Text>
               </View>
 
               <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Round</Text>
-                <Text style={styles.statValue}>{player.roundCount}</Text>
+                <Text style={styles.statLabel}>POS</Text>
+                <Text style={styles.statValue}>#{player.position}</Text>
               </View>
             </View>
           </View>
@@ -80,20 +89,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
   },
   playerCard: {
-    width: '48.5%',
-    borderRadius: 8,
+    width: '48.8%',
+    borderRadius: 10,
     padding: 6,
-    marginBottom: 6,
-    elevation: 2,
+    marginBottom: 5,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  activeCardGlow: {
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 6,
   },
   headerRow: {
     flexDirection: 'row',
@@ -103,40 +118,52 @@ const styles = StyleSheet.create({
   },
   playerName: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '900',
     flex: 1,
+  },
+  activeBadge: {
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  activeBadgeText: {
+    color: '#0F172A',
+    fontSize: 7,
+    fontWeight: '900',
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#E2E8F0',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     borderRadius: 6,
-    paddingHorizontal: 4,
+    paddingHorizontal: 5,
     paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
   },
   statItem: {
     alignItems: 'center',
   },
   statLabel: {
-    fontSize: 7,
-    color: '#475569',
-    textTransform: 'uppercase',
-    fontWeight: '700',
+    fontSize: 6.5,
+    color: '#94A3B8',
+    fontWeight: '800',
   },
   statValue: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: '800',
-    color: '#0F172A',
+    color: '#F8FAFC',
   },
   cashValue: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: '900',
-    color: '#059669',
+    color: '#34D399',
   },
   loanValue: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: '900',
-    color: '#DC2626',
+    color: '#F87171',
   },
 });

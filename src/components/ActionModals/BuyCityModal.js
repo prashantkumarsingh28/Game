@@ -4,6 +4,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { formatCurrency } from '../../utils/currency';
 import { canBuyCity, getCityBuyError } from '../../game/gameRules';
 import { PLAYER_CONFIGS } from '../../styles/theme';
+import { SoundManager } from '../../utils/soundManager';
 
 export default function BuyCityModal({ visible, city, player, onBuy, onSkip }) {
   if (!visible || !city || !player) return null;
@@ -14,14 +15,25 @@ export default function BuyCityModal({ visible, city, player, onBuy, onSkip }) {
   const errorMessage = getCityBuyError(player, city);
   const remainingCash = player.cash - city.purchasePrice;
 
+  const handleBuy = () => {
+    SoundManager.playButtonClick();
+    SoundManager.playPurchase();
+    if (onBuy) onBuy();
+  };
+
+  const handleSkip = () => {
+    SoundManager.playButtonClick();
+    if (onSkip) onSkip();
+  };
+
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.card}>
-          {/* Header */}
+          {/* Header Banner */}
           <View style={[styles.header, { backgroundColor: playerConfig.color }]}>
             <FontAwesome5 name="building" size={20} color="#FFFFFF" />
-            <Text style={styles.headerTitle}>CITY FOR SALE</Text>
+            <Text style={styles.headerTitle}>PROPERTY FOR SALE</Text>
           </View>
 
           {/* Body */}
@@ -44,7 +56,7 @@ export default function BuyCityModal({ visible, city, player, onBuy, onSkip }) {
                 <Text
                   style={[
                     styles.infoValue,
-                    { color: remainingCash > 500 ? '#10B981' : '#EF4444' },
+                    { color: remainingCash >= 0 ? '#34D399' : '#F87171' },
                   ]}
                 >
                   {formatCurrency(remainingCash)}
@@ -59,22 +71,22 @@ export default function BuyCityModal({ visible, city, player, onBuy, onSkip }) {
               </View>
             </View>
 
-            {/* Error / Warning Notice */}
+            {/* Error / Limit Warning Notice */}
             {!isEligible && errorMessage && (
               <View style={styles.errorContainer}>
-                <FontAwesome5 name="exclamation-circle" size={14} color="#EF4444" />
+                <FontAwesome5 name="exclamation-circle" size={14} color="#F87171" />
                 <Text style={styles.errorText}>{errorMessage}</Text>
               </View>
             )}
 
-            {/* Actions */}
+            {/* Tactile Actions */}
             <View style={styles.actionsRow}>
               <TouchableOpacity
                 activeOpacity={0.8}
                 style={styles.skipButton}
-                onPress={onSkip}
+                onPress={handleSkip}
               >
-                <Text style={styles.skipButtonText}>SKIP</Text>
+                <Text style={styles.skipButtonText}>PASS</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -84,7 +96,7 @@ export default function BuyCityModal({ visible, city, player, onBuy, onSkip }) {
                   styles.buyButton,
                   !isEligible && styles.disabledBuyButton,
                 ]}
-                onPress={onBuy}
+                onPress={handleBuy}
               >
                 <FontAwesome5 name="shopping-cart" size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
                 <Text style={styles.buyButtonText}>BUY CITY</Text>
@@ -100,7 +112,7 @@ export default function BuyCityModal({ visible, city, player, onBuy, onSkip }) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    backgroundColor: 'rgba(11, 19, 43, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -108,12 +120,16 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 340,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0F172A',
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderWidth: 2,
+    borderColor: '#D97706',
     overflow: 'hidden',
-    elevation: 10,
+    elevation: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
   },
   header: {
     flexDirection: 'row',
@@ -126,7 +142,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '900',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
   body: {
     padding: 20,
@@ -135,17 +151,18 @@ const styles = StyleSheet.create({
   cityName: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#0F172A',
+    color: '#F8FAFC',
     marginBottom: 16,
+    textAlign: 'center',
   },
   infoBox: {
     width: '100%',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'rgba(30, 41, 59, 0.8)',
     borderRadius: 10,
     padding: 12,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: 'rgba(245, 158, 11, 0.3)',
   },
   infoRow: {
     flexDirection: 'row',
@@ -154,29 +171,31 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   infoLabel: {
-    color: '#475569',
+    color: '#94A3B8',
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   infoValue: {
-    color: '#0F172A',
+    color: '#F8FAFC',
     fontSize: 14,
     fontWeight: '800',
   },
   priceValue: {
-    color: '#D97706',
+    color: '#F59E0B',
     fontSize: 15,
     fontWeight: '900',
   },
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#451A1A',
+    backgroundColor: 'rgba(127, 29, 29, 0.6)',
     padding: 10,
     borderRadius: 8,
     marginBottom: 14,
     width: '100%',
     gap: 8,
+    borderWidth: 1,
+    borderColor: '#EF4444',
   },
   errorText: {
     color: '#F87171',
@@ -192,10 +211,12 @@ const styles = StyleSheet.create({
   },
   skipButton: {
     flex: 1,
-    backgroundColor: '#475569',
+    backgroundColor: '#334155',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#475569',
   },
   skipButtonText: {
     color: '#CBD5E1',
@@ -204,15 +225,18 @@ const styles = StyleSheet.create({
   },
   buyButton: {
     flex: 1.5,
-    backgroundColor: '#10B981',
+    backgroundColor: '#059669',
     paddingVertical: 12,
     borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#34D399',
   },
   disabledBuyButton: {
-    backgroundColor: '#334155',
+    backgroundColor: '#1E293B',
+    borderColor: '#334155',
     opacity: 0.6,
   },
   buyButtonText: {

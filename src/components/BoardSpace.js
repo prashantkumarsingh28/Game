@@ -3,9 +3,10 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { SPACE_TYPES, PLAYER_CONFIGS } from '../styles/theme';
 import { formatCurrency } from '../utils/currency';
+import { SoundManager } from '../utils/soundManager';
 import PlayerToken from './PlayerToken';
 
-export default function BoardSpace({ space, playersOnSpace, players, onPress }) {
+export default function BoardSpace({ space, playersOnSpace, players, onPress, isCurrentTurnPlayerPos }) {
   const spaceConfig = SPACE_TYPES[space.type] || SPACE_TYPES.EMPTY;
   const owner = space.ownerId
     ? players.find((p) => p.id === space.ownerId)
@@ -14,38 +15,45 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress }) 
     ? PLAYER_CONFIGS.find((p) => p.id === owner.id)
     : null;
 
+  const handlePress = () => {
+    SoundManager.playButtonClick();
+    if (onPress) onPress(space);
+  };
+
   const renderContent = () => {
     switch (space.type) {
       case 'CITY':
         return (
           <>
             <View style={styles.cityHeader}>
-              <FontAwesome5 name="building" size={9} color={spaceConfig.accentColor} />
+              <FontAwesome5 name="building" size={8} color={spaceConfig.accentColor} />
               <Text style={styles.cityName} numberOfLines={1}>
                 {space.name}
               </Text>
             </View>
 
-            {/* House Levels */}
+            {/* House Level Indicators */}
             {space.houseLevel > 0 && (
               <View style={styles.houseRow}>
                 {Array.from({ length: space.houseLevel }).map((_, i) => (
-                  <FontAwesome5 key={i} name="home" size={8} color="#F59E0B" style={styles.houseIcon} />
+                  <FontAwesome5 key={i} name="home" size={7} color="#F59E0B" style={styles.houseIcon} />
                 ))}
               </View>
             )}
 
-            {/* Price / Owner Info */}
-            <Text style={styles.cityPrice}>
-              {owner ? `R:${formatCurrency(space.baseRent * (space.houseLevel > 0 ? (space.houseLevel === 1 ? 3 : space.houseLevel === 2 ? 4 : 6) : 1))}` : formatCurrency(space.purchasePrice)}
+            {/* Price or Rent Info */}
+            <Text style={[styles.cityPrice, ownerConfig && { color: ownerConfig.color }]}>
+              {owner
+                ? `R:${formatCurrency(space.baseRent * (space.houseLevel > 0 ? (space.houseLevel === 1 ? 3 : space.houseLevel === 2 ? 4 : 6) : 1))}`
+                : formatCurrency(space.purchasePrice)}
             </Text>
           </>
         );
 
       case 'ORIGIN':
         return (
-          <View style={styles.cornerContent}>
-            <FontAwesome5 name="flag-checkered" size={12} color="#10B981" />
+          <View style={styles.specialContent}>
+            <FontAwesome5 name="flag-checkered" size={12} color="#34D399" />
             <Text style={styles.cornerTitle}>START</Text>
             <Text style={styles.cornerSub}>+₹1.5k</Text>
           </View>
@@ -53,8 +61,8 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress }) 
 
       case 'SAFE':
         return (
-          <View style={styles.cornerContent}>
-            <FontAwesome5 name="shield-alt" size={12} color="#8B5CF6" />
+          <View style={styles.specialContent}>
+            <FontAwesome5 name="shield-alt" size={12} color="#C084FC" />
             <Text style={styles.cornerTitle}>SAFE</Text>
           </View>
         );
@@ -62,7 +70,7 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress }) 
       case 'MARKET':
         return (
           <View style={styles.specialContent}>
-            <FontAwesome5 name="store" size={11} color="#F97316" />
+            <FontAwesome5 name="store" size={11} color="#FB923C" />
             <Text style={styles.specialTitle}>MARKET</Text>
           </View>
         );
@@ -70,7 +78,7 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress }) 
       case 'FINE':
         return (
           <View style={styles.specialContent}>
-            <FontAwesome5 name="gavel" size={11} color="#EF4444" />
+            <FontAwesome5 name="gavel" size={11} color="#F87171" />
             <Text style={styles.specialTitle}>FINE</Text>
             <Text style={styles.specialSub}>-₹1,000</Text>
           </View>
@@ -81,7 +89,7 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress }) 
         return (
           <View style={styles.specialContent}>
             <FontAwesome5 name="coffee" size={10} color="#94A3B8" />
-            <Text style={styles.specialTitle}>SAFE</Text>
+            <Text style={styles.specialTitle}>REST</Text>
           </View>
         );
     }
@@ -89,8 +97,8 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress }) 
 
   return (
     <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={() => onPress && onPress(space)}
+      activeOpacity={0.75}
+      onPress={handlePress}
       style={[
         styles.container,
         {
@@ -98,9 +106,13 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress }) 
           borderColor: ownerConfig ? ownerConfig.color : spaceConfig.borderColor,
           borderWidth: ownerConfig ? 2 : 1,
         },
+        isCurrentTurnPlayerPos && styles.highlightedTile,
       ]}
     >
-      {/* Owner Badge Indicator */}
+      {/* Glossy top bevel reflection */}
+      <View style={styles.topReflect} />
+
+      {/* Owner Badge Header */}
       {ownerConfig && (
         <View style={[styles.ownerBadge, { backgroundColor: ownerConfig.color }]}>
           <Text style={styles.ownerBadgeText}>P{owner.id}</Text>
@@ -114,7 +126,7 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress }) 
       {playersOnSpace.length > 0 && (
         <View style={styles.tokensContainer}>
           {playersOnSpace.map((p) => (
-            <PlayerToken key={p.id} player={p} size={14} />
+            <PlayerToken key={p.id} player={p} size={15} isCurrentTurn={p.isCurrentTurn} />
           ))}
         </View>
       )}
@@ -125,14 +137,36 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress }) 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    margin: 1,
-    borderRadius: 4,
+    margin: 0.8,
+    borderRadius: 5,
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 2,
     paddingHorizontal: 1,
     position: 'relative',
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  topReflect: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  highlightedTile: {
+    borderColor: '#F59E0B',
+    borderWidth: 2,
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+    elevation: 6,
   },
   contentWrapper: {
     alignItems: 'center',
@@ -147,9 +181,9 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   cityName: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#0F172A',
+    fontSize: 8.5,
+    fontWeight: '900',
+    color: '#F8FAFC',
     textAlign: 'center',
   },
   houseRow: {
@@ -158,56 +192,53 @@ const styles = StyleSheet.create({
     marginVertical: 1,
   },
   houseIcon: {
-    marginHorizontal: 1,
+    marginHorizontal: 0.5,
   },
   cityPrice: {
-    fontSize: 8,
-    fontWeight: '700',
-    color: '#475569',
-    marginTop: 1,
-  },
-  cornerContent: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cornerTitle: {
-    fontSize: 9,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    marginTop: 1,
-  },
-  cornerSub: {
-    fontSize: 7,
-    color: '#ECFDF5',
-    fontWeight: '700',
+    fontSize: 7.5,
+    fontWeight: '800',
+    color: '#CBD5E1',
+    marginTop: 0.5,
   },
   specialContent: {
     alignItems: 'center',
     justifyContent: 'center',
   },
+  cornerTitle: {
+    fontSize: 8.5,
+    fontWeight: '900',
+    color: '#F8FAFC',
+    marginTop: 1,
+  },
+  cornerSub: {
+    fontSize: 7,
+    color: '#34D399',
+    fontWeight: '800',
+  },
   specialTitle: {
     fontSize: 8,
-    fontWeight: '800',
-    color: '#1E293B',
+    fontWeight: '900',
+    color: '#F8FAFC',
     textAlign: 'center',
   },
   specialSub: {
     fontSize: 7,
-    color: '#DC2626',
-    fontWeight: '700',
+    color: '#F87171',
+    fontWeight: '800',
   },
   ownerBadge: {
     position: 'absolute',
     top: 0,
     right: 0,
     borderBottomLeftRadius: 4,
-    paddingHorizontal: 2,
-    paddingVertical: 1,
+    paddingHorizontal: 2.5,
+    paddingVertical: 0.5,
+    zIndex: 2,
   },
   ownerBadgeText: {
     color: '#FFFFFF',
-    fontSize: 7,
-    fontWeight: 'bold',
+    fontSize: 6.5,
+    fontWeight: '900',
   },
   tokensContainer: {
     flexDirection: 'row',

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import BoardSpace from './BoardSpace';
 
 const PERIMETER_MAP = [
@@ -33,69 +33,83 @@ const PERIMETER_MAP = [
   { row: 1, col: 0 }, // 27
 ];
 
-export default function Board({ board, players, onSpacePress, centerContent }) {
+export default function Board({ board, players, currentPlayerIndex, onSpacePress, centerContent }) {
+  const activePlayer = players && players[currentPlayerIndex];
+
   return (
-    <View style={styles.boardWrapper}>
-      <View style={styles.gridContainer}>
-        {/* Render 28 Perimeter Spaces */}
-        {board.map((space, index) => {
-          const gridPos = PERIMETER_MAP[index] || { row: 0, col: 0 };
-          const playersOnSpace = players.filter(
-            (p) => p.position === space.id
-          );
+    <View style={styles.boardOuterShadow}>
+      <View style={styles.boardWrapper}>
+        <View style={styles.gridContainer}>
+          {/* Render 28 Perimeter Spaces */}
+          {board.map((space, index) => {
+            const gridPos = PERIMETER_MAP[index] || { row: 0, col: 0 };
+            const playersOnSpace = (players || []).map((p, idx) => ({
+              ...p,
+              isCurrentTurn: idx === currentPlayerIndex,
+            })).filter((p) => p.position === space.id);
 
-          return (
-            <View
-              key={space.id}
-              style={[
-                styles.gridCell,
-                {
-                  left: `${(gridPos.col / 7) * 100}%`,
-                  top: `${(gridPos.row / 9) * 100}%`,
-                  width: `${(1 / 7) * 100}%`,
-                  height: `${(1 / 9) * 100}%`,
-                },
-              ]}
-            >
-              <BoardSpace
-                space={space}
-                playersOnSpace={playersOnSpace}
-                players={players}
-                onPress={onSpacePress}
-              />
-            </View>
-          );
-        })}
+            const isCurrentTurnPlayerPos = activePlayer && activePlayer.position === space.id;
 
-        {/* Center Area (Rows 1..7, Cols 1..5) */}
-        <View style={styles.centerArea}>{centerContent}</View>
+            return (
+              <View
+                key={space.id}
+                style={[
+                  styles.gridCell,
+                  {
+                    left: `${(gridPos.col / 7) * 100}%`,
+                    top: `${(gridPos.row / 9) * 100}%`,
+                    width: `${(1 / 7) * 100}%`,
+                    height: `${(1 / 9) * 100}%`,
+                  },
+                ]}
+              >
+                <BoardSpace
+                  space={space}
+                  playersOnSpace={playersOnSpace}
+                  players={players}
+                  onPress={onSpacePress}
+                  isCurrentTurnPlayerPos={isCurrentTurnPlayerPos}
+                />
+              </View>
+            );
+          })}
+
+          {/* Center Area (Rows 1..7, Cols 1..5) */}
+          <View style={styles.centerArea}>{centerContent}</View>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  boardWrapper: {
+  boardOuterShadow: {
     width: '100%',
     aspectRatio: 7 / 9,
     maxHeight: 460,
-    backgroundColor: '#E2E8F0',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#CBD5E1',
-    padding: 2,
-    overflow: 'hidden',
     alignSelf: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.75,
+    shadowRadius: 12,
+    elevation: 10,
+    marginVertical: 4,
+  },
+  boardWrapper: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#0F172A',
+    borderRadius: 14,
+    borderWidth: 3,
+    borderColor: '#D97706', // Luxury Gold border rim
+    padding: 3,
+    overflow: 'hidden',
   },
   gridContainer: {
     width: '100%',
     height: '100%',
     position: 'relative',
+    backgroundColor: 'rgba(15, 23, 42, 0.95)',
   },
   gridCell: {
     position: 'absolute',
@@ -106,10 +120,10 @@ const styles = StyleSheet.create({
     top: `${(1 / 9) * 100}%`,
     width: `${(5 / 7) * 100}%`,
     height: `${(7 / 9) * 100}%`,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
+    backgroundColor: 'rgba(11, 19, 43, 0.95)',
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(245, 158, 11, 0.4)', // Faint gold border
     padding: 6,
     justifyContent: 'center',
     alignItems: 'center',

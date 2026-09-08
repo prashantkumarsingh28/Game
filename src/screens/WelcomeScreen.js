@@ -1,69 +1,87 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { GAME_COLORS } from '../styles/theme';
-
 import { SoundManager } from '../utils/soundManager';
+import { ASSETS } from '../assets';
 
 export default function WelcomeScreen({ onStart }) {
   const handlePressStart = () => {
     SoundManager.unlockAudio();
-    SoundManager.playCash();
+    SoundManager.playMoneyReceived();
     onStart();
   };
 
   return (
-    <View style={styles.container}>
-      {/* Background Decor */}
-      <View style={styles.badgeContainer}>
-        <FontAwesome5 name="city" size={56} color="#F59E0B" />
+    <ImageBackground
+      source={ASSETS.images.backgroundWallpaper}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      <View style={styles.darkOverlay}>
+        <View style={styles.container}>
+          {/* Central Logo Badge */}
+          <View style={styles.badgeContainer}>
+            <FontAwesome5 name="city" size={54} color="#F59E0B" />
+          </View>
+
+          <Text style={styles.title}>LUXURY</Text>
+          <Text style={styles.subtitle}>BUSINESS MONOPOLY</Text>
+
+          <Text style={styles.tagline}>
+            Premium Real-Estate & Financial Board Game
+          </Text>
+
+          {/* Features Card */}
+          <View style={styles.featuresList}>
+            <View style={styles.featureItem}>
+              <FontAwesome5 name="dice-d6" size={16} color="#F59E0B" />
+              <Text style={styles.featureText}>Physical 3D Dice & Smooth Token Stepping</Text>
+            </View>
+
+            <View style={styles.featureItem}>
+              <FontAwesome5 name="building" size={16} color="#34D399" />
+              <Text style={styles.featureText}>Buy Cities & Build Luxury Properties</Text>
+            </View>
+
+            <View style={styles.featureItem}>
+              <FontAwesome5 name="piggy-bank" size={16} color="#60A5FA" />
+              <Text style={styles.featureText}>Automated Bank Loans & Round Bonuses</Text>
+            </View>
+
+            <View style={styles.featureItem}>
+              <FontAwesome5 name="users" size={16} color="#C084FC" />
+              <Text style={styles.featureText}>2 to 4 Player Pass & Play Multiplayer</Text>
+            </View>
+          </View>
+
+          {/* Start Action Button */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.startButton}
+            onPress={handlePressStart}
+          >
+            <FontAwesome5 name="play" size={16} color="#FFFFFF" style={{ marginRight: 10 }} />
+            <Text style={styles.startButtonText}>START GAME</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-
-      <Text style={styles.title}>BUSINESS</Text>
-      <Text style={styles.subtitle}>MONOPOLY</Text>
-
-      <Text style={styles.tagline}>
-        Indian Cities Board Game for 2 to 4 Players
-      </Text>
-
-      <View style={styles.featuresList}>
-        <View style={styles.featureItem}>
-          <FontAwesome5 name="dice" size={16} color="#10B981" />
-          <Text style={styles.featureText}>Animated Dice & Token Movement</Text>
-        </View>
-
-        <View style={styles.featureItem}>
-          <FontAwesome5 name="building" size={16} color="#3B82F6" />
-          <Text style={styles.featureText}>Buy Cities & Upgrade Houses</Text>
-        </View>
-
-        <View style={styles.featureItem}>
-          <FontAwesome5 name="piggy-bank" size={16} color="#F59E0B" />
-          <Text style={styles.featureText}>Bank Loans & Origin Round Bonuses</Text>
-        </View>
-
-        <View style={styles.featureItem}>
-          <FontAwesome5 name="users" size={16} color="#EC4899" />
-          <Text style={styles.featureText}>Local Same-Device Multiplayer</Text>
-        </View>
-      </View>
-
-      <TouchableOpacity
-        activeOpacity={0.8}
-        style={styles.startButton}
-        onPress={handlePressStart}
-      >
-        <FontAwesome5 name="play" size={16} color="#FFFFFF" style={{ marginRight: 10 }} />
-        <Text style={styles.startButtonText}>START GAME</Text>
-      </TouchableOpacity>
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  darkOverlay: {
+    flex: 1,
+    backgroundColor: GAME_COLORS.darkOverlay,
+  },
   container: {
     flex: 1,
-    backgroundColor: GAME_COLORS.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
@@ -72,44 +90,50 @@ const styles = StyleSheet.create({
     width: 110,
     height: 110,
     borderRadius: 55,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0F172A',
     borderWidth: 3,
     borderColor: '#D97706',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-    elevation: 4,
+    elevation: 8,
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
   },
   title: {
     fontSize: 32,
     fontWeight: '900',
-    color: '#0F172A',
-    letterSpacing: 2,
+    color: '#F8FAFC',
+    letterSpacing: 3,
   },
   subtitle: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: '900',
-    color: '#D97706',
-    letterSpacing: 4,
+    color: '#F59E0B',
+    letterSpacing: 2,
     marginBottom: 8,
+    textAlign: 'center',
   },
   tagline: {
     fontSize: 14,
-    color: '#475569',
+    color: '#94A3B8',
     textAlign: 'center',
     marginBottom: 32,
+    fontWeight: '600',
   },
   featuresList: {
     width: '100%',
-    maxWidth: 320,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 18,
+    maxWidth: 340,
+    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+    borderRadius: 16,
+    padding: 20,
     marginBottom: 36,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    gap: 12,
-    elevation: 2,
+    borderWidth: 1.5,
+    borderColor: 'rgba(245, 158, 11, 0.4)',
+    gap: 14,
+    elevation: 6,
   },
   featureItem: {
     flexDirection: 'row',
@@ -117,29 +141,31 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   featureText: {
-    color: '#334155',
+    color: '#F8FAFC',
     fontSize: 13,
     fontWeight: '700',
   },
   startButton: {
     width: '100%',
-    maxWidth: 320,
-    backgroundColor: '#10B981',
+    maxWidth: 340,
+    backgroundColor: '#D97706',
     paddingVertical: 16,
     borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 6,
-    shadowColor: '#10B981',
+    borderWidth: 1.5,
+    borderColor: '#FCD34D',
+    elevation: 8,
+    shadowColor: '#F59E0B',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 5,
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
   },
   startButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '900',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
 });

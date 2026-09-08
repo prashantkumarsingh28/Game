@@ -12,6 +12,7 @@ import { formatCurrency } from '../../utils/currency';
 import { getHouseUpgradeCost, canUpgradeHouse } from '../../game/houseSystem';
 import { getRentAmount } from '../../game/rentSystem';
 import { PLAYER_CONFIGS } from '../../styles/theme';
+import { SoundManager } from '../../utils/soundManager';
 
 export default function MarketModal({
   visible,
@@ -37,26 +38,37 @@ export default function MarketModal({
   const cost = selectedCity ? getHouseUpgradeCost(selectedCity.houseLevel) : null;
   const canAfford = selectedCity && canUpgradeHouse(player, selectedCity);
 
+  const handleBuild = () => {
+    SoundManager.playButtonClick();
+    SoundManager.playBuild();
+    if (selectedCity && onBuild) onBuild(selectedCity);
+  };
+
+  const handleSkip = () => {
+    SoundManager.playButtonClick();
+    if (onSkip) onSkip();
+  };
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
         <View style={styles.card}>
-          {/* Header */}
-          <View style={[styles.header, { backgroundColor: '#F97316' }]}>
+          {/* Header Banner */}
+          <View style={[styles.header, { backgroundColor: '#D97706' }]}>
             <FontAwesome5 name="store" size={20} color="#FFFFFF" />
-            <Text style={styles.headerTitle}>MARKETPLACE</Text>
+            <Text style={styles.headerTitle}>REAL ESTATE MARKETPLACE</Text>
           </View>
 
           <View style={styles.body}>
             <Text style={styles.subtitle}>
-              Build or Upgrade a House (Max 1 upgrade per visit)
+              Upgrade property houses to increase rent collection
             </Text>
 
             {ownedCities.length === 0 ? (
               <View style={styles.emptyContainer}>
                 <FontAwesome5 name="city" size={32} color="#64748B" />
                 <Text style={styles.emptyText}>
-                  You do not own any cities yet. Buy cities first to build houses!
+                  You do not own any properties yet. Land on city tiles to acquire real estate first!
                 </Text>
               </View>
             ) : (
@@ -73,7 +85,10 @@ export default function MarketModal({
                     <TouchableOpacity
                       key={city.id}
                       activeOpacity={0.8}
-                      onPress={() => !isMax && setSelectedCityId(city.id)}
+                      onPress={() => {
+                        SoundManager.playButtonClick();
+                        if (!isMax) setSelectedCityId(city.id);
+                      }}
                       style={[
                         styles.cityItem,
                         isSelected && styles.selectedCityItem,
@@ -99,7 +114,7 @@ export default function MarketModal({
                           </Text>
                         ) : (
                           <Text style={styles.maxText}>
-                            Maximum level reached
+                            Max house level reached
                           </Text>
                         )}
                       </View>
@@ -109,12 +124,12 @@ export default function MarketModal({
               </ScrollView>
             )}
 
-            {/* Actions */}
+            {/* Tactile Actions */}
             <View style={styles.actionsRow}>
               <TouchableOpacity
                 activeOpacity={0.8}
                 style={styles.skipButton}
-                onPress={onSkip}
+                onPress={handleSkip}
               >
                 <Text style={styles.skipButtonText}>
                   {ownedCities.length === 0 ? 'CONTINUE' : 'SKIP'}
@@ -129,11 +144,11 @@ export default function MarketModal({
                     styles.buildButton,
                     (!selectedCity || !canAfford) && styles.disabledBuildButton,
                   ]}
-                  onPress={() => selectedCity && onBuild(selectedCity)}
+                  onPress={handleBuild}
                 >
                   <FontAwesome5 name="hammer" size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
                   <Text style={styles.buildButtonText}>
-                    BUILD HOUSE ({cost ? formatCurrency(cost) : 'SELECT'})
+                    UPGRADE ({cost ? formatCurrency(cost) : 'SELECT'})
                   </Text>
                 </TouchableOpacity>
               )}
@@ -148,7 +163,7 @@ export default function MarketModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    backgroundColor: 'rgba(11, 19, 43, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -156,12 +171,13 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 350,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0F172A',
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderWidth: 2,
+    borderColor: '#D97706',
     overflow: 'hidden',
     maxHeight: 520,
+    elevation: 12,
   },
   header: {
     flexDirection: 'row',
@@ -172,16 +188,16 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '900',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
   body: {
     padding: 16,
   },
   subtitle: {
     fontSize: 12,
-    color: '#475569',
+    color: '#94A3B8',
     textAlign: 'center',
     marginBottom: 12,
   },
@@ -192,29 +208,29 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyText: {
-    color: '#475569',
+    color: '#CBD5E1',
     textAlign: 'center',
     fontSize: 13,
     paddingHorizontal: 16,
   },
   cityList: {
-    maxHeight: 280,
+    maxHeight: 270,
     marginBottom: 12,
   },
   cityItem: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'rgba(30, 41, 59, 0.8)',
     borderRadius: 10,
     padding: 10,
     marginBottom: 8,
     borderWidth: 1.5,
-    borderColor: '#CBD5E1',
+    borderColor: '#334155',
   },
   selectedCityItem: {
-    borderColor: '#EA580C',
-    backgroundColor: '#FFEDD5',
+    borderColor: '#F59E0B',
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
   },
   maxCityItem: {
-    opacity: 0.6,
+    opacity: 0.5,
   },
   cityItemHeader: {
     flexDirection: 'row',
@@ -223,18 +239,20 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   cityItemName: {
-    color: '#0F172A',
+    color: '#F8FAFC',
     fontSize: 15,
     fontWeight: '800',
   },
   levelBadge: {
-    backgroundColor: '#E2E8F0',
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F59E0B',
   },
   levelText: {
-    color: '#D97706',
+    color: '#F59E0B',
     fontSize: 11,
     fontWeight: '800',
   },
@@ -244,16 +262,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   detailText: {
-    color: '#475569',
+    color: '#94A3B8',
     fontSize: 11,
   },
   upgradeCostText: {
-    color: '#059669',
+    color: '#34D399',
     fontSize: 11,
     fontWeight: '700',
   },
   maxText: {
-    color: '#EF4444',
+    color: '#F87171',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -265,7 +283,7 @@ const styles = StyleSheet.create({
   },
   skipButton: {
     flex: 1,
-    backgroundColor: '#475569',
+    backgroundColor: '#334155',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
@@ -277,7 +295,7 @@ const styles = StyleSheet.create({
   },
   buildButton: {
     flex: 2,
-    backgroundColor: '#F97316',
+    backgroundColor: '#D97706',
     paddingVertical: 12,
     borderRadius: 10,
     flexDirection: 'row',
@@ -285,7 +303,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   disabledBuildButton: {
-    backgroundColor: '#334155',
+    backgroundColor: '#1E293B',
+    borderColor: '#334155',
     opacity: 0.6,
   },
   buildButtonText: {

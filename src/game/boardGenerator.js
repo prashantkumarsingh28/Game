@@ -15,9 +15,12 @@ const shuffleArray = (array) => {
 };
 
 /**
- * Generates a fresh randomized rectangular board of 28 perimeter spaces.
+ * Generates a randomized board scaled dynamically according to starting money.
+ * Base starting money is ₹5,000 (multiplier = 1).
+ * e.g., ₹10,000 -> multiplier = 2 (Prices, Rent, Fines, Bonus scaled x2).
  */
-export const generateBoard = () => {
+export const generateBoard = (startingMoney = 5000) => {
+  const multiplier = Math.max(1, Math.round(startingMoney / 5000));
   const shuffledCities = shuffleArray(INDIAN_CITIES);
   let cityIndex = 0;
 
@@ -27,7 +30,9 @@ export const generateBoard = () => {
       id: `city_${id}`,
       name: `City ${id}`,
     };
-    const price = getRandomCityPrice();
+    const price = getRandomCityPrice() * multiplier;
+    const baseRent = Math.round(price * 0.2); // Rent proportional to purchase price
+
     return {
       id,
       type: SPACE_TYPES.CITY.type,
@@ -36,16 +41,19 @@ export const generateBoard = () => {
       purchasePrice: price,
       ownerId: null,
       houseLevel: 0,
-      baseRent: 500,
+      baseRent: baseRent,
     };
   };
+
+  const fineAmount = 1000 * multiplier;
+  const originBonus = 1500 * multiplier;
 
   // Build Side 1 (Top Edge - 5 spaces): 4 Cities + 1 Fine
   const side1Types = shuffleArray(['CITY', 'CITY', 'CITY', 'CITY', 'FINE']);
   const side1 = side1Types.map((type, idx) => {
     const id = idx + 1;
     if (type === 'FINE') {
-      return { id, type: 'FINE', name: 'Fine', fineAmount: 1000 };
+      return { id, type: 'FINE', name: 'Fine', fineAmount };
     }
     return createCitySpace(id);
   });
@@ -76,7 +84,7 @@ export const generateBoard = () => {
   const side3 = side3Types.map((type, idx) => {
     const id = idx + 15;
     if (type === 'FINE') {
-      return { id, type: 'FINE', name: 'Fine', fineAmount: 1000 };
+      return { id, type: 'FINE', name: 'Fine', fineAmount };
     }
     return createCitySpace(id);
   });
@@ -104,7 +112,7 @@ export const generateBoard = () => {
 
   // Assemble perimeter in order (Indices 0..27)
   const board = [
-    { id: 0, type: 'ORIGIN', name: 'ORIGIN', bonusAmount: 1500 }, // Corner 0: Top-Left
+    { id: 0, type: 'ORIGIN', name: 'ORIGIN', bonusAmount: originBonus }, // Corner 0: Top-Left
     ...side1, // Indices 1..5
     { id: 6, type: 'SAFE', name: 'SAFE 1' }, // Corner 1: Top-Right
     ...side2, // Indices 7..13

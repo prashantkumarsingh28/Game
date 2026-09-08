@@ -20,6 +20,9 @@ import MarketModal from '../components/ActionModals/MarketModal';
 import TransactionModal from '../components/ActionModals/TransactionModal';
 
 export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOver }) {
+  const safePlayers = Array.isArray(initialPlayers) && initialPlayers.length > 0 ? initialPlayers : [];
+  const initialCashAmount = safePlayers[0]?.cash || 10000;
+
   const [board, setBoard] = useState([]);
   const [players, setPlayers] = useState(initialPlayers);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
@@ -53,15 +56,15 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
     }, 2200);
   };
 
-  // Initialize board & background music
+  // Initialize board scaled according to selected starting money
   useEffect(() => {
-    const newBoard = generateBoard();
+    const newBoard = generateBoard(initialCashAmount);
     setBoard(newBoard);
     SoundManager.startBackgroundMusic();
     return () => {
       SoundManager.stopBackgroundMusic();
     };
-  }, []);
+  }, [initialCashAmount]);
 
   // Timer Countdown Effect
   useEffect(() => {
@@ -84,12 +87,12 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
     return () => clearInterval(timer);
   }, [timerMinutes, secondsLeft, players, board]);
 
-  const safePlayers = Array.isArray(players) && players.length > 0 ? players : initialPlayers || [];
-  const currentPlayer = safePlayers[currentPlayerIndex] || safePlayers[0] || {
+  const activePlayersList = Array.isArray(players) && players.length > 0 ? players : safePlayers;
+  const currentPlayer = activePlayersList[currentPlayerIndex] || activePlayersList[0] || {
     id: 1,
     name: 'Player 1',
     color: '#EF4444',
-    cash: 10000,
+    cash: initialCashAmount,
     loan: 0,
     position: 0,
     citiesOwned: [],
@@ -157,12 +160,13 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
       SoundManager.playStep();
 
       if (passedOrigin) {
+        const bonusAmount = 1500 * Math.max(1, Math.round(initialCashAmount / 5000));
         SoundManager.playMoneyReceived();
-        triggerPopup('+₹1,500', 'ORIGIN BONUS', '#34D399', 'coins');
+        triggerPopup(`+${formatCurrency(bonusAmount)}`, 'ORIGIN BONUS', '#34D399', 'coins');
         const bonusResult = processOriginLoanRepayment(
           activePlayerState.cash,
           activePlayerState.loan,
-          1500
+          bonusAmount
         );
 
         activePlayerState.cash = bonusResult.newCash;
@@ -174,14 +178,14 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
           if (bonusResult.amountRepaid > 0) {
             notify(
               'ROUND BONUS & LOAN REPAYMENT',
-              `Round ${activePlayerState.roundCount} completed! ₹1,500 bonus used toward bank loan.\nRepaid: ${formatCurrency(bonusResult.amountRepaid)}\nRemaining Loan: ${formatCurrency(bonusResult.newLoan)}`,
+              `Round ${activePlayerState.roundCount} completed! ${formatCurrency(bonusAmount)} bonus used toward bank loan.\nRepaid: ${formatCurrency(bonusResult.amountRepaid)}\nRemaining Loan: ${formatCurrency(bonusResult.newLoan)}`,
               'hand-holding-usd',
               '#10B981'
             );
           } else {
             notify(
               'ROUND COMPLETED',
-              `Round ${activePlayerState.roundCount} completed! ₹1,500 bonus added to your cash.`,
+              `Round ${activePlayerState.roundCount} completed! ${formatCurrency(bonusAmount)} bonus added to your cash.`,
               'coins',
               '#10B981'
             );
@@ -221,10 +225,11 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
         handleFineSpace(space, actingPlayer);
         break;
       case 'ORIGIN':
+        const bonusAmount = space.bonusAmount || 1500;
         SoundManager.playMoneyReceived();
         notify(
           'LANDED ON ORIGIN',
-          'You landed directly on Origin! Round completed and ₹1,500 bonus collected.',
+          `You landed directly on Origin! Round completed and ${formatCurrency(bonusAmount)} bonus collected.`,
           'flag-checkered',
           '#10B981'
         );
@@ -254,7 +259,7 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
       );
     } else {
       const owner = players.find((p) => p.id === space.ownerId);
-      const rentAmount = getRentAmount(space.houseLevel);
+      const rentAmount = getRentAmount(space.houseLevel, space.baseRent);
 
       const loanResult = processDeficitLoan(
         actingPlayer.cash,
@@ -334,7 +339,7 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
   };
 
   const handleBuildHouse = (selectedCity) => {
-    const cost = getHouseUpgradeCost(selectedCity.houseLevel);
+    const cost = getHouseUpgradeCost(selectedCity.houseLevel, initialCashAmount);
     if (!cost || currentPlayer.cash < cost) return;
 
     SoundManager.playPurchase();
@@ -354,7 +359,7 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
 
     notify(
       'HOUSE UPGRADED!',
-      `House level on ${selectedCity.name} upgraded to Level ${selectedCity.houseLevel + 1} for ${formatCurrency(cost)}! Rent is now ${formatCurrency(getRentAmount(selectedCity.houseLevel + 1))}.`,
+      `House level on ${selectedCity.name} upgraded to Level ${selectedCity.houseLevel + 1} for ${formatCurrency(cost)}! Rent is now ${formatCurrency(getRentAmount(selectedCity.houseLevel + 1, selectedCity.baseRent))}.`,
       'home',
       '#F59E0B'
     );
@@ -508,7 +513,7 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
             </View>
           </View>
 
-          {/* Main Board Centerpiece */}
+          {/* Main Board Centerpiece - Background wallpaper visible behind board */}
           <Board
             board={board}
             players={players}
@@ -516,9 +521,10 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
             onSpacePress={(space) => {
               if (space.type === 'CITY') {
                 const owner = players.find((p) => p.id === space.ownerId);
+                const rent = getRentAmount(space.houseLevel, space.baseRent);
                 Alert.alert(
                   space.name,
-                  `Price: ${formatCurrency(space.purchasePrice)}\nOwner: ${owner ? owner.name : 'Available'}\nHouse Level: ${space.houseLevel}\nRent: ${formatCurrency(getRentAmount(space.houseLevel))}`
+                  `Price: ${formatCurrency(space.purchasePrice)}\nOwner: ${owner ? owner.name : 'Available'}\nHouse Level: ${space.houseLevel}\nCurrent Rent: ${formatCurrency(rent)}`
                 );
               }
             }}
@@ -575,6 +581,7 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
             visible={marketModalVisible}
             player={currentPlayer}
             ownedCities={ownedCitiesForCurrentPlayer}
+            startingMoney={initialCashAmount}
             onBuild={handleBuildHouse}
             onSkip={handleSkipMarket}
           />
@@ -601,7 +608,7 @@ const styles = StyleSheet.create({
   },
   darkOverlay: {
     flex: 1,
-    backgroundColor: GAME_COLORS.darkOverlay,
+    backgroundColor: 'rgba(11, 19, 43, 0.45)', // Semi-transparent dark overlay allowing wallpaper to shine behind board
   },
   container: {
     flex: 1,
@@ -636,7 +643,7 @@ const styles = StyleSheet.create({
   timerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
     borderColor: '#F59E0B',
     borderWidth: 1,
     paddingHorizontal: 8,
@@ -646,7 +653,7 @@ const styles = StyleSheet.create({
   },
   lowTimerBadge: {
     borderColor: '#EF4444',
-    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    backgroundColor: 'rgba(239, 68, 68, 0.25)',
   },
   timerText: {
     color: '#F59E0B',
@@ -657,15 +664,15 @@ const styles = StyleSheet.create({
     color: '#EF4444',
   },
   iconBtn: {
-    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-    borderColor: '#334155',
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    borderColor: 'rgba(245, 158, 11, 0.3)',
     borderWidth: 1,
     padding: 6,
     borderRadius: 10,
     elevation: 2,
   },
   endGameBtn: {
-    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    backgroundColor: 'rgba(239, 68, 68, 0.25)',
     borderColor: '#EF4444',
     borderWidth: 1,
     padding: 6,
@@ -695,7 +702,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   roundTrackerText: {
-    color: '#94A3B8',
+    color: '#CBD5E1',
     fontSize: 10,
     fontWeight: '800',
     marginTop: 2,

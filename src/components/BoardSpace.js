@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { SPACE_TYPES, PLAYER_CONFIGS } from '../styles/theme';
 import { formatCurrency } from '../utils/currency';
+import { getRentAmount } from '../game/rentSystem';
 import { SoundManager } from '../utils/soundManager';
 import PlayerToken from './PlayerToken';
 
@@ -44,7 +45,7 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress, is
             {/* Price or Rent Info */}
             <Text style={[styles.cityPrice, ownerConfig && { color: ownerConfig.color }]}>
               {owner
-                ? `R:${formatCurrency(space.baseRent * (space.houseLevel > 0 ? (space.houseLevel === 1 ? 3 : space.houseLevel === 2 ? 4 : 6) : 1))}`
+                ? `R:${formatCurrency(getRentAmount(space.houseLevel, space.baseRent))}`
                 : formatCurrency(space.purchasePrice)}
             </Text>
           </>
@@ -55,7 +56,7 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress, is
           <View style={styles.specialContent}>
             <FontAwesome5 name="flag-checkered" size={12} color="#34D399" />
             <Text style={styles.cornerTitle}>START</Text>
-            <Text style={styles.cornerSub}>+₹1.5k</Text>
+            <Text style={styles.cornerSub}>+{formatCurrency(space.bonusAmount || 1500)}</Text>
           </View>
         );
 
@@ -80,7 +81,7 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress, is
           <View style={styles.specialContent}>
             <FontAwesome5 name="gavel" size={11} color="#F87171" />
             <Text style={styles.specialTitle}>FINE</Text>
-            <Text style={styles.specialSub}>-₹1,000</Text>
+            <Text style={styles.specialSub}>-{formatCurrency(space.fineAmount || 1000)}</Text>
           </View>
         );
 

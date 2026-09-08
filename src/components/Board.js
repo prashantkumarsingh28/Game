@@ -74,7 +74,7 @@ export default function Board({ board, players, currentPlayerIndex, onSpacePress
             );
           })}
 
-          {/* Center Area (Rows 1..7, Cols 1..5) */}
+          {/* Center Area (Rows 1..7, Cols 1..5) - Semi-transparent glass allowing wallpaper visibility */}
           <View style={styles.centerArea}>{centerContent}</View>
         </View>
       </View>
@@ -90,17 +90,17 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.75,
-    shadowRadius: 12,
-    elevation: 10,
+    shadowOpacity: 0.8,
+    shadowRadius: 14,
+    elevation: 12,
     marginVertical: 4,
   },
   boardWrapper: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#0F172A',
+    backgroundColor: 'rgba(15, 23, 42, 0.75)', // Glass structure letting wallpaper show through
     borderRadius: 14,
-    borderWidth: 3,
+    borderWidth: 3.5,
     borderColor: '#D97706', // Luxury Gold border rim
     padding: 3,
     overflow: 'hidden',
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     position: 'relative',
-    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+    backgroundColor: 'rgba(15, 23, 42, 0.35)',
   },
   gridCell: {
     position: 'absolute',
@@ -120,10 +120,10 @@ const styles = StyleSheet.create({
     top: `${(1 / 9) * 100}%`,
     width: `${(5 / 7) * 100}%`,
     height: `${(7 / 9) * 100}%`,
-    backgroundColor: 'rgba(11, 19, 43, 0.95)',
+    backgroundColor: 'rgba(11, 19, 43, 0.55)', // Semi-transparent dark glass table centerpiece
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: 'rgba(245, 158, 11, 0.4)', // Faint gold border
+    borderColor: 'rgba(245, 158, 11, 0.5)',
     padding: 6,
     justifyContent: 'center',
     alignItems: 'center',

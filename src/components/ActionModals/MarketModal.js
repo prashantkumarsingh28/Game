@@ -18,6 +18,7 @@ export default function MarketModal({
   visible,
   player,
   ownedCities,
+  startingMoney = 5000,
   onBuild,
   onSkip,
 }) {
@@ -35,8 +36,8 @@ export default function MarketModal({
     PLAYER_CONFIGS.find((p) => p.id === player.id) || PLAYER_CONFIGS[0];
 
   const selectedCity = ownedCities.find((c) => c.id === selectedCityId);
-  const cost = selectedCity ? getHouseUpgradeCost(selectedCity.houseLevel) : null;
-  const canAfford = selectedCity && canUpgradeHouse(player, selectedCity);
+  const cost = selectedCity ? getHouseUpgradeCost(selectedCity.houseLevel, startingMoney) : null;
+  const canAfford = selectedCity && canUpgradeHouse(player, selectedCity, startingMoney);
 
   const handleBuild = () => {
     SoundManager.playButtonClick();
@@ -75,11 +76,11 @@ export default function MarketModal({
               <ScrollView style={styles.cityList} nestedScrollEnabled>
                 {ownedCities.map((city) => {
                   const isSelected = city.id === selectedCityId;
-                  const upgradeCost = getHouseUpgradeCost(city.houseLevel);
+                  const upgradeCost = getHouseUpgradeCost(city.houseLevel, startingMoney);
                   const isMax = city.houseLevel >= 3;
                   const nextRent = !isMax
-                    ? getRentAmount(city.houseLevel + 1)
-                    : getRentAmount(3);
+                    ? getRentAmount(city.houseLevel + 1, city.baseRent)
+                    : getRentAmount(3, city.baseRent);
 
                   return (
                     <TouchableOpacity
@@ -106,7 +107,7 @@ export default function MarketModal({
 
                       <View style={styles.cityItemDetails}>
                         <Text style={styles.detailText}>
-                          Current Rent: {formatCurrency(getRentAmount(city.houseLevel))}
+                          Current Rent: {formatCurrency(getRentAmount(city.houseLevel, city.baseRent))}
                         </Text>
                         {!isMax ? (
                           <Text style={styles.upgradeCostText}>

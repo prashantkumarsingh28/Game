@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Luxury Business Monopoly - Web & PC Edition</title>
+  <meta name="description" content="Play Luxury Business Monopoly on PC, Desktop, and Mobile Web browsers in full screen widescreen ratio.">
+  <link rel="icon" href="./dist/favicon.ico" type="image/x-icon">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      background-color: #070B19;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #F8FAFC;
+      overflow: hidden;
+    }
+
+    /* Outer PC / Desktop Wrapper */
+    #app-viewport-wrapper {
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      height: 100vh;
+      background: #070B19;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Game Frame Container - Widescreen Full Ratio */
+    #game-frame-container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+      background: #0F172A;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: transparent;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app-viewport-wrapper">
+    <!-- Main Game Container -->
+    <div id="game-frame-container">
+      <iframe id="game-iframe" src="./dist/index.html" title="Luxury Business Monopoly Game"></iframe>
+    </div>
+  </div>
+
+  <script>
+    // Check if dist/index.html is reachable or fallback to docs/index.html
+    const iframe = document.getElementById('game-iframe');
+    iframe.onerror = function() {
+      iframe.src = './docs/index.html';
+    };
+  </script>
+
+</body>
+</html>

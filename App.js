@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View, Platform } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 
@@ -44,47 +44,73 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
-        <ExpoStatusBar style="light" />
+      <View style={styles.webOuterContainer}>
+        <SafeAreaView style={styles.container}>
+          <ExpoStatusBar style="light" />
 
-        {screen === 'WELCOME' && (
-          <WelcomeScreen onStart={handleStartSetup} />
-        )}
+          {screen === 'WELCOME' && (
+            <WelcomeScreen onStart={handleStartSetup} />
+          )}
 
-        {screen === 'SETUP_PLAYERS' && (
-          <PlayerSetupScreen onNext={handlePlayersConfigured} />
-        )}
+          {screen === 'SETUP_PLAYERS' && (
+            <PlayerSetupScreen onNext={handlePlayersConfigured} />
+          )}
 
-        {screen === 'SETUP_MONEY' && (
-          <StartingMoneyScreen
-            players={players}
-            onStartGame={handleStartingMoneySelected}
-          />
-        )}
+          {screen === 'SETUP_MONEY' && (
+            <StartingMoneyScreen
+              players={players}
+              onStartGame={handleStartingMoneySelected}
+            />
+          )}
 
-        {screen === 'GAME' && (
-          <GameScreen
-            initialPlayers={players}
-            timerMinutes={timerMinutes}
-            onGameOver={handleGameOver}
-          />
-        )}
+          {screen === 'GAME' && (
+            <GameScreen
+              initialPlayers={players}
+              timerMinutes={timerMinutes}
+              onGameOver={handleGameOver}
+            />
+          )}
 
-        {screen === 'GAME_OVER' && gameOverData && (
-          <GameOverScreen
-            players={gameOverData.players}
-            board={gameOverData.board}
-            onPlayAgain={handlePlayAgain}
-          />
-        )}
-      </SafeAreaView>
+          {screen === 'GAME_OVER' && gameOverData && (
+            <GameOverScreen
+              players={gameOverData.players}
+              board={gameOverData.board}
+              onPlayAgain={handlePlayAgain}
+            />
+          )}
+        </SafeAreaView>
+      </View>
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  webOuterContainer: {
     flex: 1,
     backgroundColor: GAME_COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+    ...(Platform.OS === 'web'
+      ? {
+          height: '100vh',
+          width: '100vw',
+          overflow: 'hidden',
+        }
+      : {}),
+  },
+  container: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    backgroundColor: GAME_COLORS.background,
+    ...(Platform.OS === 'web'
+      ? {
+          maxWidth: '100%',
+          maxHeight: '100vh',
+        }
+      : {}),
   },
 });
+

@@ -3,18 +3,19 @@ import { View, Text, StyleSheet, TouchableOpacity, ImageBackground } from 'react
 import { FontAwesome5 } from '@expo/vector-icons';
 import { GAME_COLORS } from '../styles/theme';
 import { SoundManager } from '../utils/soundManager';
-import { ASSETS } from '../assets';
+import { ASSETS, getAssetSource } from '../assets';
 
 export default function WelcomeScreen({ onStart }) {
   const handlePressStart = () => {
     SoundManager.unlockAudio();
+    SoundManager.startBackgroundMusic();
     SoundManager.playMoneyReceived();
     onStart();
   };
 
   return (
     <ImageBackground
-      source={ASSETS.images.backgroundWallpaper}
+      source={getAssetSource(ASSETS.images.luxuryGameWallpaper || ASSETS.images.backgroundWallpaper)}
       style={styles.backgroundImage}
       resizeMode="cover"
     >
@@ -78,7 +79,7 @@ const styles = StyleSheet.create({
   },
   darkOverlay: {
     flex: 1,
-    backgroundColor: GAME_COLORS.darkOverlay,
+    backgroundColor: 'rgba(7, 11, 25, 0.55)',
   },
   container: {
     flex: 1,
@@ -125,8 +126,8 @@ const styles = StyleSheet.create({
   },
   featuresList: {
     width: '100%',
-    maxWidth: 340,
-    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+    maxWidth: 380,
+    backgroundColor: 'rgba(15, 23, 42, 0.92)',
     borderRadius: 16,
     padding: 20,
     marginBottom: 36,
@@ -147,7 +148,7 @@ const styles = StyleSheet.create({
   },
   startButton: {
     width: '100%',
-    maxWidth: 340,
+    maxWidth: 380,
     backgroundColor: '#D97706',
     paddingVertical: 16,
     borderRadius: 14,

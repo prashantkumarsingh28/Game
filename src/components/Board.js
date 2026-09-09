@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ImageBackground, Platform } from 'react-native';
 import BoardSpace from './BoardSpace';
+import { ASSETS, getAssetSource } from '../assets';
 
 const PERIMETER_MAP = [
   { row: 0, col: 0 }, // 0: ORIGIN
@@ -33,11 +34,11 @@ const PERIMETER_MAP = [
   { row: 1, col: 0 }, // 27
 ];
 
-export default function Board({ board, players, currentPlayerIndex, onSpacePress, centerContent }) {
+export default function Board({ board, players, currentPlayerIndex, onSpacePress, centerContent, customStyle }) {
   const activePlayer = players && players[currentPlayerIndex];
 
   return (
-    <View style={styles.boardOuterShadow}>
+    <View style={[styles.boardOuterShadow, customStyle]}>
       <View style={styles.boardWrapper}>
         <View style={styles.gridContainer}>
           {/* Render 28 Perimeter Spaces */}
@@ -74,8 +75,17 @@ export default function Board({ board, players, currentPlayerIndex, onSpacePress
             );
           })}
 
-          {/* Center Area (Rows 1..7, Cols 1..5) - Semi-transparent glass allowing wallpaper visibility */}
-          <View style={styles.centerArea}>{centerContent}</View>
+          {/* Center Area (Rows 1..7, Cols 1..5) - Light Designer City Wallpaper Inside Business Board */}
+          <ImageBackground
+            source={getAssetSource(ASSETS.images.cityBoardWallpaper)}
+            style={styles.centerArea}
+            imageStyle={{ borderRadius: 10, opacity: 0.85 }}
+            resizeMode="cover"
+          >
+            <View style={styles.centerOverlay}>
+              {centerContent}
+            </View>
+          </ImageBackground>
         </View>
       </View>
     </View>
@@ -86,7 +96,7 @@ const styles = StyleSheet.create({
   boardOuterShadow: {
     width: '100%',
     aspectRatio: 7 / 9,
-    maxHeight: 460,
+    maxHeight: Platform.OS === 'web' ? '88vh' : 460,
     alignSelf: 'center',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 10 },
@@ -98,7 +108,7 @@ const styles = StyleSheet.create({
   boardWrapper: {
     width: '100%',
     height: '100%',
-    backgroundColor: 'rgba(15, 23, 42, 0.75)', // Glass structure letting wallpaper show through
+    backgroundColor: 'rgba(15, 23, 42, 0.9)',
     borderRadius: 14,
     borderWidth: 3.5,
     borderColor: '#D97706', // Luxury Gold border rim
@@ -109,7 +119,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     position: 'relative',
-    backgroundColor: 'rgba(15, 23, 42, 0.35)',
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
   },
   gridCell: {
     position: 'absolute',
@@ -120,10 +130,14 @@ const styles = StyleSheet.create({
     top: `${(1 / 9) * 100}%`,
     width: `${(5 / 7) * 100}%`,
     height: `${(7 / 9) * 100}%`,
-    backgroundColor: 'rgba(11, 19, 43, 0.55)', // Semi-transparent dark glass table centerpiece
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: 'rgba(245, 158, 11, 0.5)',
+    borderColor: 'rgba(245, 158, 11, 0.6)',
+    overflow: 'hidden',
+  },
+  centerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(11, 19, 43, 0.65)', // Elegant semi-transparent overlay over city blueprint wallpaper
     padding: 6,
     justifyContent: 'center',
     alignItems: 'center',

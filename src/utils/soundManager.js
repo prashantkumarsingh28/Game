@@ -1,4 +1,4 @@
-// Expo-compatible Sound & Music Manager
+// Expo & Web Compatible Sound & Music Manager
 // Supports Web Audio synthesis fallback & custom audio file triggers
 
 let isSfxMuted = false;
@@ -21,6 +21,21 @@ const getAudioContext = () => {
   return audioContextInstance;
 };
 
+// Global Web Audio Unlocker (Attaches to first user gesture on web)
+if (typeof window !== 'undefined') {
+  const unlockOnUserGesture = () => {
+    try {
+      const ctx = getAudioContext();
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume();
+      }
+    } catch (e) {}
+  };
+  ['pointerdown', 'touchstart', 'click', 'keydown'].forEach((evt) => {
+    window.addEventListener(evt, unlockOnUserGesture, { once: true });
+  });
+}
+
 const playTone = (frequency, durationMs = 150, type = 'sine', volume = 0.15, freqRampTo = null) => {
   if (isSfxMuted) return;
   try {
@@ -34,10 +49,7 @@ const playTone = (frequency, durationMs = 150, type = 'sine', volume = 0.15, fre
         osc.frequency.exponentialRampToValueAtTime(freqRampTo, ctx.currentTime + durationMs / 1000);
       }
       gain.gain.setValueAtTime(volume, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(
-        0.001,
-        ctx.currentTime + durationMs / 1000
-      );
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationMs / 1000);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start();
@@ -46,11 +58,35 @@ const playTone = (frequency, durationMs = 150, type = 'sine', volume = 0.15, fre
   } catch (e) {}
 };
 
+// Dedicated Music Note player that only checks isMusicMuted
+const playMusicNote = (frequency, durationMs = 600, type = 'sine', volume = 0.04) => {
+  if (isMusicMuted) return;
+  try {
+    const ctx = getAudioContext();
+    if (ctx) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(frequency, ctx.currentTime);
+      gain.gain.setValueAtTime(0.001, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + durationMs / 1000);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + durationMs / 1000);
+    }
+  } catch (e) {}
+};
+
+// Luxury Monopoly Soothing Chord Progression
 const luxuryChords = [
   [261.63, 329.63, 392.00, 493.88], // Cmaj7
   [220.00, 261.63, 329.63, 392.00], // Am7
   [174.61, 220.00, 261.63, 329.63], // Fmaj7
   [196.00, 246.94, 293.66, 349.23], // G7
+  [164.81, 196.00, 246.94, 293.66], // Em7
+  [146.83, 174.61, 220.00, 261.63], // Dm7
 ];
 
 export const SoundManager = {
@@ -83,6 +119,13 @@ export const SoundManager = {
 
   startBackgroundMusic: () => {
     if (bgMusicInterval || isMusicMuted) return;
+    SoundManager.unlockAudio();
+
+    // Play immediate intro note
+    try {
+      playMusicNote(261.63, 800, 'sine', 0.05);
+    } catch (e) {}
+
     bgMusicInterval = setInterval(() => {
       if (isMusicMuted) return;
       try {
@@ -91,12 +134,12 @@ export const SoundManager = {
         chord.forEach((freq, idx) => {
           setTimeout(() => {
             if (!isMusicMuted) {
-              playTone(freq, 600, 'sine', 0.05);
+              playMusicNote(freq, 750, 'sine', 0.04);
             }
-          }, idx * 220);
+          }, idx * 260);
         });
       } catch (e) {}
-    }, 4000);
+    }, 3200);
   },
 
   stopBackgroundMusic: () => {
@@ -106,7 +149,7 @@ export const SoundManager = {
     }
   },
 
-  // 1. Dice rolling sound
+  // Sound Effects (SFX)
   playDiceRoll: () => {
     if (isSfxMuted) return;
     try {
@@ -117,7 +160,6 @@ export const SoundManager = {
     } catch (e) {}
   },
 
-  // 2. Dice landing / click sound
   playDiceLanding: () => {
     if (isSfxMuted) return;
     try {
@@ -125,7 +167,6 @@ export const SoundManager = {
     } catch (e) {}
   },
 
-  // 3. Player movement / step sound
   playStep: () => {
     if (isSfxMuted) return;
     try {
@@ -133,7 +174,6 @@ export const SoundManager = {
     } catch (e) {}
   },
 
-  // 4. Token landing sound
   playTokenLanding: () => {
     if (isSfxMuted) return;
     try {
@@ -142,7 +182,6 @@ export const SoundManager = {
     } catch (e) {}
   },
 
-  // 5. Button click sound
   playButtonClick: () => {
     if (isSfxMuted) return;
     try {
@@ -150,7 +189,6 @@ export const SoundManager = {
     } catch (e) {}
   },
 
-  // 6. Property purchase sound
   playPurchase: () => {
     if (isSfxMuted) return;
     try {
@@ -160,7 +198,6 @@ export const SoundManager = {
     } catch (e) {}
   },
 
-  // 7. Money received sound (Origin bonus / income)
   playMoneyReceived: () => {
     if (isSfxMuted) return;
     try {
@@ -169,7 +206,6 @@ export const SoundManager = {
     } catch (e) {}
   },
 
-  // 8. Money spent / payment sound (Rent / Fine)
   playMoneySpent: () => {
     if (isSfxMuted) return;
     try {
@@ -178,7 +214,6 @@ export const SoundManager = {
     } catch (e) {}
   },
 
-  // 9. Card draw sound
   playCardDraw: () => {
     if (isSfxMuted) return;
     try {
@@ -186,7 +221,6 @@ export const SoundManager = {
     } catch (e) {}
   },
 
-  // 10. Notification / alert sound
   playNotification: () => {
     if (isSfxMuted) return;
     try {
@@ -195,7 +229,6 @@ export const SoundManager = {
     } catch (e) {}
   },
 
-  // 11. Turn-change sound
   playTurnChange: () => {
     if (isSfxMuted) return;
     try {
@@ -205,7 +238,6 @@ export const SoundManager = {
     } catch (e) {}
   },
 
-  // 12. Victory / win sound
   playVictory: () => {
     if (isSfxMuted) return;
     try {

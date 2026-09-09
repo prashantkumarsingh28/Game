@@ -4,17 +4,22 @@
 export const ASSETS = {
   images: {
     backgroundWallpaper: require('../assets/images/background_wallpaper.png'),
+    cityBoardWallpaper: require('../assets/images/city_board_wallpaper.png'),
+    luxuryGameWallpaper: require('../assets/images/luxury_game_wallpaper.png'),
+    realEstateCityWallpaper: require('../assets/images/real_estate_city_wallpaper.png'),
   },
-  sounds: {
-    // Custom audio file overrides can be plugged here
-    // diceRoll: require('../assets/sounds/dice_roll.mp3'),
-    // diceLanding: require('../assets/sounds/dice_landing.mp3'),
-    // step: require('../assets/sounds/step.mp3'),
-    // purchase: require('../assets/sounds/purchase.mp3'),
-    // victory: require('../assets/sounds/victory.mp3'),
-  },
-  music: {
-    // Custom music track override
-    // bgMusic: require('../assets/music/bg_music.mp3'),
-  },
+  sounds: {},
+  music: {},
 };
+
+export function getAssetSource(asset) {
+  if (!asset) return null;
+  if (typeof asset === 'string') return { uri: asset };
+  if (typeof asset === 'object') {
+    if (asset.uri) return asset;
+    if (asset.default) {
+      return typeof asset.default === 'string' ? { uri: asset.default } : asset.default;
+    }
+  }
+  return asset;
+}

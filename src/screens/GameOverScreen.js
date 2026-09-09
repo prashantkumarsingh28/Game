@@ -4,7 +4,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { formatCurrency } from '../utils/currency';
 import { PLAYER_CONFIGS, GAME_COLORS } from '../styles/theme';
 import { SoundManager } from '../utils/soundManager';
-import { ASSETS } from '../assets';
+import { ASSETS, getAssetSource } from '../assets';
 import PlayerToken from '../components/PlayerToken';
 
 export default function GameOverScreen({ players = [], board = [], onPlayAgain }) {
@@ -17,16 +17,17 @@ export default function GameOverScreen({ players = [], board = [], onPlayAgain }
 
   // Calculate net worth for each player
   const playerStats = safePlayers.map((player) => {
-    const ownedCityObjects = safeBoard.filter((s) => s && s.ownerId === player.id);
+    const ownedCityObjects = safeBoard.filter((s) => s && (s.ownerId === player.id || (player.citiesOwned || []).includes(s.id)));
     const citiesValue = ownedCityObjects.reduce(
       (sum, c) => sum + (c.purchasePrice || 0),
       0
     );
     const houseValue = ownedCityObjects.reduce((sum, c) => {
       let cost = 0;
-      if (c.houseLevel >= 1) cost += 3000;
-      if (c.houseLevel >= 2) cost += 2000;
-      if (c.houseLevel >= 3) cost += 5000;
+      if (c.houseLevel >= 1) cost += 1500;
+      if (c.houseLevel >= 2) cost += 1500;
+      if (c.houseLevel >= 3) cost += 1500;
+      if (c.houseLevel >= 4) cost += 2000;
       return sum + cost;
     }, 0);
 
@@ -62,7 +63,7 @@ export default function GameOverScreen({ players = [], board = [], onPlayAgain }
 
   return (
     <ImageBackground
-      source={ASSETS.images.backgroundWallpaper}
+      source={getAssetSource(ASSETS.images.luxuryGameWallpaper || ASSETS.images.backgroundWallpaper)}
       style={styles.backgroundImage}
       resizeMode="cover"
     >
@@ -157,7 +158,7 @@ const styles = StyleSheet.create({
   },
   darkOverlay: {
     flex: 1,
-    backgroundColor: GAME_COLORS.darkOverlay,
+    backgroundColor: 'rgba(7, 11, 25, 0.55)',
   },
   container: {
     flexGrow: 1,
@@ -187,7 +188,7 @@ const styles = StyleSheet.create({
   },
   winnerBanner: {
     width: '100%',
-    maxWidth: 340,
+    maxWidth: 420,
     backgroundColor: 'rgba(15, 23, 42, 0.95)',
     borderRadius: 16,
     borderWidth: 2,
@@ -232,7 +233,7 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     width: '100%',
-    maxWidth: 340,
+    maxWidth: 420,
     gap: 12,
     marginBottom: 32,
   },
@@ -292,7 +293,7 @@ const styles = StyleSheet.create({
   },
   playAgainButton: {
     width: '100%',
-    maxWidth: 340,
+    maxWidth: 420,
     backgroundColor: '#D97706',
     paddingVertical: 16,
     borderRadius: 14,

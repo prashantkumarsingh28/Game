@@ -9,12 +9,6 @@ import PlayerToken from './PlayerToken';
 
 export default function BoardSpace({ space, playersOnSpace, players, onPress, isCurrentTurnPlayerPos }) {
   const spaceConfig = SPACE_TYPES[space.type] || SPACE_TYPES.EMPTY;
-  const owner = space.ownerId
-    ? players.find((p) => p.id === space.ownerId)
-    : null;
-  const ownerConfig = owner
-    ? PLAYER_CONFIGS.find((p) => p.id === owner.id)
-    : null;
 
   const handlePress = () => {
     SoundManager.playButtonClick();
@@ -25,9 +19,11 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress, is
     switch (space.type) {
       case 'CITY':
         return (
-          <>
+          <View style={styles.cityContentWrapper}>
+            {/* Top City Color Banner */}
+            <View style={[styles.cityColorBar, { backgroundColor: space.color || spaceConfig.accentColor || '#3B82F6' }]} />
+
             <View style={styles.cityHeader}>
-              <FontAwesome5 name="building" size={8} color={spaceConfig.accentColor} />
               <Text style={styles.cityName} numberOfLines={1}>
                 {space.name}
               </Text>
@@ -37,24 +33,22 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress, is
             {space.houseLevel > 0 && (
               <View style={styles.houseRow}>
                 {Array.from({ length: space.houseLevel }).map((_, i) => (
-                  <FontAwesome5 key={i} name="home" size={7} color="#F59E0B" style={styles.houseIcon} />
+                  <FontAwesome5 key={i} name="home" size={8} color="#F59E0B" style={styles.houseIcon} />
                 ))}
               </View>
             )}
 
-            {/* Price or Rent Info */}
-            <Text style={[styles.cityPrice, ownerConfig && { color: ownerConfig.color }]}>
-              {owner
-                ? `R:${formatCurrency(getRentAmount(space.houseLevel, space.baseRent))}`
-                : formatCurrency(space.purchasePrice)}
+            {/* Clean Price Info */}
+            <Text style={styles.cityPrice}>
+              {formatCurrency(space.purchasePrice)}
             </Text>
-          </>
+          </View>
         );
 
       case 'ORIGIN':
         return (
           <View style={styles.specialContent}>
-            <FontAwesome5 name="flag-checkered" size={12} color="#34D399" />
+            <FontAwesome5 name="flag-checkered" size={16} color="#34D399" />
             <Text style={styles.cornerTitle}>START</Text>
             <Text style={styles.cornerSub}>+{formatCurrency(space.bonusAmount || 1500)}</Text>
           </View>
@@ -63,7 +57,7 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress, is
       case 'SAFE':
         return (
           <View style={styles.specialContent}>
-            <FontAwesome5 name="shield-alt" size={12} color="#C084FC" />
+            <FontAwesome5 name="shield-alt" size={16} color="#C084FC" />
             <Text style={styles.cornerTitle}>SAFE</Text>
           </View>
         );
@@ -71,7 +65,7 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress, is
       case 'MARKET':
         return (
           <View style={styles.specialContent}>
-            <FontAwesome5 name="store" size={11} color="#FB923C" />
+            <FontAwesome5 name="store" size={15} color="#FB923C" />
             <Text style={styles.specialTitle}>MARKET</Text>
           </View>
         );
@@ -79,7 +73,7 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress, is
       case 'FINE':
         return (
           <View style={styles.specialContent}>
-            <FontAwesome5 name="gavel" size={11} color="#F87171" />
+            <FontAwesome5 name="gavel" size={15} color="#F87171" />
             <Text style={styles.specialTitle}>FINE</Text>
             <Text style={styles.specialSub}>-{formatCurrency(space.fineAmount || 1000)}</Text>
           </View>
@@ -89,7 +83,7 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress, is
       default:
         return (
           <View style={styles.specialContent}>
-            <FontAwesome5 name="coffee" size={10} color="#94A3B8" />
+            <FontAwesome5 name="coffee" size={14} color="#94A3B8" />
             <Text style={styles.specialTitle}>REST</Text>
           </View>
         );
@@ -103,27 +97,17 @@ export default function BoardSpace({ space, playersOnSpace, players, onPress, is
       style={[
         styles.container,
         {
-          backgroundColor: spaceConfig.bgColor,
-          borderColor: ownerConfig ? ownerConfig.color : spaceConfig.borderColor,
-          borderWidth: ownerConfig ? 2 : 1,
+          backgroundColor: 'rgba(15, 23, 42, 0.92)',
+          borderColor: spaceConfig.borderColor,
+          borderWidth: 1,
         },
         isCurrentTurnPlayerPos && styles.highlightedTile,
       ]}
     >
-      {/* Glossy top bevel reflection */}
-      <View style={styles.topReflect} />
-
-      {/* Owner Badge Header */}
-      {ownerConfig && (
-        <View style={[styles.ownerBadge, { backgroundColor: ownerConfig.color }]}>
-          <Text style={styles.ownerBadgeText}>P{owner.id}</Text>
-        </View>
-      )}
-
       {/* Main Space Content */}
       <View style={styles.contentWrapper}>{renderContent()}</View>
 
-      {/* Players Tokens Container */}
+      {/* Players Tokens Container (When player lands on space) */}
       {playersOnSpace.length > 0 && (
         <View style={styles.tokensContainer}>
           {playersOnSpace.map((p) => (
@@ -139,35 +123,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     margin: 0.8,
-    borderRadius: 5,
+    borderRadius: 6,
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 2,
+    paddingVertical: 1,
     paddingHorizontal: 1,
     position: 'relative',
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 2,
-    elevation: 3,
-  },
-  topReflect: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
+    elevation: 4,
   },
   highlightedTile: {
     borderColor: '#F59E0B',
-    borderWidth: 2,
+    borderWidth: 2.5,
     shadowColor: '#F59E0B',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 6,
-    elevation: 6,
+    shadowOpacity: 0.9,
+    shadowRadius: 8,
+    elevation: 8,
   },
   contentWrapper: {
     alignItems: 'center',
@@ -175,17 +151,34 @@ const styles = StyleSheet.create({
     width: '100%',
     flex: 1,
   },
+  cityContentWrapper: {
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    height: '100%',
+    paddingBottom: 2,
+  },
+  cityColorBar: {
+    width: '100%',
+    height: 4,
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
+  },
   cityHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
+    paddingHorizontal: 2,
+    marginTop: 1,
   },
   cityName: {
-    fontSize: 8.5,
+    fontSize: 10,
     fontWeight: '900',
-    color: '#F8FAFC',
+    color: '#FFFFFF',
     textAlign: 'center',
+    letterSpacing: 0.2,
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   houseRow: {
     flexDirection: 'row',
@@ -196,49 +189,41 @@ const styles = StyleSheet.create({
     marginHorizontal: 0.5,
   },
   cityPrice: {
-    fontSize: 7.5,
-    fontWeight: '800',
-    color: '#CBD5E1',
-    marginTop: 0.5,
+    fontSize: 8.5,
+    fontWeight: '900',
+    color: '#34D399',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
   },
   specialContent: {
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 2,
   },
   cornerTitle: {
-    fontSize: 8.5,
+    fontSize: 9.5,
     fontWeight: '900',
-    color: '#F8FAFC',
-    marginTop: 1,
+    color: '#FFFFFF',
+    marginTop: 2,
+    letterSpacing: 0.5,
   },
   cornerSub: {
-    fontSize: 7,
+    fontSize: 7.5,
     color: '#34D399',
-    fontWeight: '800',
+    fontWeight: '900',
   },
   specialTitle: {
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: '900',
-    color: '#F8FAFC',
+    color: '#FFFFFF',
     textAlign: 'center',
+    marginTop: 2,
   },
   specialSub: {
-    fontSize: 7,
+    fontSize: 7.5,
     color: '#F87171',
-    fontWeight: '800',
-  },
-  ownerBadge: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    borderBottomLeftRadius: 4,
-    paddingHorizontal: 2.5,
-    paddingVertical: 0.5,
-    zIndex: 2,
-  },
-  ownerBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 6.5,
     fontWeight: '900',
   },
   tokensContainer: {
@@ -247,5 +232,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 1,
+    gap: 2,
   },
 });

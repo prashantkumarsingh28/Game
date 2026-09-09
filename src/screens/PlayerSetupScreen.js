@@ -11,7 +11,7 @@ import {
 import { FontAwesome5 } from '@expo/vector-icons';
 import { PLAYER_CONFIGS, TIMER_OPTIONS, GAME_COLORS } from '../styles/theme';
 import { SoundManager } from '../utils/soundManager';
-import { ASSETS } from '../assets';
+import { ASSETS, getAssetSource } from '../assets';
 
 export default function PlayerSetupScreen({ onNext }) {
   const [playerCount, setPlayerCount] = useState(2);
@@ -53,117 +53,127 @@ export default function PlayerSetupScreen({ onNext }) {
 
   return (
     <ImageBackground
-      source={ASSETS.images.backgroundWallpaper}
+      source={getAssetSource(ASSETS.images.luxuryGameWallpaper || ASSETS.images.backgroundWallpaper)}
       style={styles.backgroundImage}
       resizeMode="cover"
     >
       <View style={styles.darkOverlay}>
         <ScrollView contentContainerStyle={styles.container}>
           <Text style={styles.title}>PLAYER SETUP</Text>
-          <Text style={styles.subtitle}>Select total players and match timer</Text>
+          <Text style={styles.subtitle}>Configure match options and player profiles</Text>
 
-          {/* Player Count Selector (2, 3, 4) */}
-          <View style={styles.countSelectorRow}>
-            {[2, 3, 4].map((count) => (
-              <TouchableOpacity
-                key={count}
-                activeOpacity={0.8}
-                onPress={() => {
-                  SoundManager.playButtonClick();
-                  setPlayerCount(count);
-                }}
-                style={[
-                  styles.countButton,
-                  playerCount === count && styles.selectedCountButton,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.countButtonText,
-                    playerCount === count && styles.selectedCountText,
-                  ]}
-                >
-                  {count} Players
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Game Timer Selection */}
-          <Text style={styles.sectionHeader}>GAME DURATION TIMER</Text>
-          <View style={styles.timerGrid}>
-            {TIMER_OPTIONS.map((opt) => {
-              const isSelected = selectedTimer === opt.minutes;
-              return (
-                <TouchableOpacity
-                  key={opt.minutes}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    SoundManager.playButtonClick();
-                    setSelectedTimer(opt.minutes);
-                  }}
-                  style={[
-                    styles.timerCard,
-                    isSelected && styles.selectedTimerCard,
-                  ]}
-                >
-                  <FontAwesome5
-                    name="clock"
-                    size={12}
-                    color={isSelected ? '#F59E0B' : '#94A3B8'}
-                    style={{ marginBottom: 2 }}
-                  />
-                  <Text
+          <View style={styles.formCard}>
+            {/* 1. Total Players Selection */}
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionHeader}>TOTAL PLAYERS</Text>
+              <View style={styles.countSelectorRow}>
+                {[2, 3, 4].map((count) => (
+                  <TouchableOpacity
+                    key={count}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      SoundManager.playButtonClick();
+                      setPlayerCount(count);
+                    }}
                     style={[
-                      styles.timerText,
-                      isSelected && styles.selectedTimerText,
+                      styles.countButton,
+                      playerCount === count && styles.selectedCountButton,
                     ]}
                   >
-                    {opt.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+                    <Text
+                      style={[
+                        styles.countButtonText,
+                        playerCount === count && styles.selectedCountText,
+                      ]}
+                    >
+                      {count} Players
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* 2. Match Duration Timer */}
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionHeader}>MATCH DURATION TIMER</Text>
+              <View style={styles.timerGrid}>
+                {TIMER_OPTIONS.map((opt) => {
+                  const isSelected = selectedTimer === opt.minutes;
+                  return (
+                    <TouchableOpacity
+                      key={opt.minutes}
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        SoundManager.playButtonClick();
+                        setSelectedTimer(opt.minutes);
+                      }}
+                      style={[
+                        styles.timerCard,
+                        isSelected && styles.selectedTimerCard,
+                      ]}
+                    >
+                      <FontAwesome5
+                        name="clock"
+                        size={12}
+                        color={isSelected ? '#F59E0B' : '#94A3B8'}
+                        style={{ marginBottom: 2 }}
+                      />
+                      <Text
+                        style={[
+                          styles.timerText,
+                          isSelected && styles.selectedTimerText,
+                        ]}
+                      >
+                        {opt.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* 3. Player Names */}
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionHeader}>PLAYER NAMES</Text>
+              <View style={styles.inputsContainer}>
+                {Array.from({ length: playerCount }).map((_, i) => {
+                  const config = PLAYER_CONFIGS[i];
+
+                  return (
+                    <View
+                      key={config.id}
+                      style={[styles.playerInputRow, { borderColor: config.color }]}
+                    >
+                      <View
+                        style={[styles.colorBadge, { backgroundColor: config.color }]}
+                      >
+                        <FontAwesome5 name={config.icon} size={14} color="#FFFFFF" />
+                      </View>
+
+                      <TextInput
+                        style={styles.textInput}
+                        value={playerNames[config.id]}
+                        onChangeText={(text) => handleNameChange(config.id, text)}
+                        placeholder={config.defaultName}
+                        placeholderTextColor="#64748B"
+                        maxLength={16}
+                      />
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Next Action Button */}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={styles.nextButton}
+              onPress={handleProceed}
+            >
+              <Text style={styles.nextButtonText}>NEXT: STARTING MONEY</Text>
+              <FontAwesome5 name="arrow-right" size={16} color="#FFFFFF" style={{ marginLeft: 8 }} />
+            </TouchableOpacity>
           </View>
-
-          {/* Player Names Input Section */}
-          <Text style={styles.sectionHeader}>PLAYER NAMES</Text>
-          <View style={styles.inputsContainer}>
-            {Array.from({ length: playerCount }).map((_, i) => {
-              const config = PLAYER_CONFIGS[i];
-
-              return (
-                <View
-                  key={config.id}
-                  style={[styles.playerInputRow, { borderColor: config.color }]}
-                >
-                  <View
-                    style={[styles.colorBadge, { backgroundColor: config.color }]}
-                  >
-                    <FontAwesome5 name={config.icon} size={14} color="#FFFFFF" />
-                  </View>
-
-                  <TextInput
-                    style={styles.textInput}
-                    value={playerNames[config.id]}
-                    onChangeText={(text) => handleNameChange(config.id, text)}
-                    placeholder={config.defaultName}
-                    placeholderTextColor="#64748B"
-                    maxLength={16}
-                  />
-                </View>
-              );
-            })}
-          </View>
-
-          <TouchableOpacity
-            activeOpacity={0.85}
-            style={styles.nextButton}
-            onPress={handleProceed}
-          >
-            <Text style={styles.nextButtonText}>NEXT: STARTING MONEY</Text>
-            <FontAwesome5 name="arrow-right" size={16} color="#FFFFFF" style={{ marginLeft: 8 }} />
-          </TouchableOpacity>
         </ScrollView>
       </View>
     </ImageBackground>
@@ -178,7 +188,7 @@ const styles = StyleSheet.create({
   },
   darkOverlay: {
     flex: 1,
-    backgroundColor: GAME_COLORS.darkOverlay,
+    backgroundColor: 'rgba(7, 11, 25, 0.55)',
   },
   container: {
     flexGrow: 1,
@@ -192,33 +202,48 @@ const styles = StyleSheet.create({
     color: '#F8FAFC',
     letterSpacing: 2,
     marginBottom: 4,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 13,
     color: '#94A3B8',
-    marginBottom: 16,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  formCard: {
+    width: '100%',
+    maxWidth: 440,
+    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(245, 158, 11, 0.4)',
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.7,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  sectionContainer: {
+    marginBottom: 20,
+    width: '100%',
   },
   sectionHeader: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '900',
     color: '#F59E0B',
     letterSpacing: 1.2,
-    alignSelf: 'flex-start',
-    width: '100%',
-    maxWidth: 340,
-    marginBottom: 8,
-    marginTop: 8,
+    marginBottom: 10,
+    textAlign: 'center',
   },
   countSelectorRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 14,
     width: '100%',
-    maxWidth: 340,
   },
   countButton: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    backgroundColor: 'rgba(30, 41, 59, 0.8)',
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',
@@ -243,13 +268,11 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     width: '100%',
-    maxWidth: 340,
     gap: 8,
-    marginBottom: 16,
   },
   timerCard: {
     width: '31%',
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    backgroundColor: 'rgba(30, 41, 59, 0.8)',
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: 'center',
@@ -258,7 +281,7 @@ const styles = StyleSheet.create({
   },
   selectedTimerCard: {
     borderColor: '#F59E0B',
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
   },
   timerText: {
     color: '#94A3B8',
@@ -271,18 +294,16 @@ const styles = StyleSheet.create({
   },
   inputsContainer: {
     width: '100%',
-    maxWidth: 340,
     gap: 10,
-    marginBottom: 24,
   },
   playerInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+    backgroundColor: 'rgba(30, 41, 59, 0.9)',
     borderRadius: 12,
     borderWidth: 1.5,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
   },
   colorBadge: {
     width: 30,
@@ -300,7 +321,6 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     width: '100%',
-    maxWidth: 340,
     backgroundColor: '#D97706',
     paddingVertical: 16,
     borderRadius: 14,
@@ -310,6 +330,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#FCD34D',
     elevation: 8,
+    marginTop: 10,
   },
   nextButtonText: {
     color: '#FFFFFF',

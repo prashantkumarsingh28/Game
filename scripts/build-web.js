@@ -2,7 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-console.log('🚀 Building Expo Web bundle for Business Monopoly...');
+console.log('🚀 Building Expo Web bundle for GitHub Pages deployment...');
+
+const projectRoot = path.join(__dirname, '..');
+const distDir = path.join(projectRoot, 'dist');
+const docsDir = path.join(projectRoot, 'docs');
+const distIndexPath = path.join(distDir, 'index.html');
 
 // Step 1: Run Expo Export for Web
 try {
@@ -11,11 +16,6 @@ try {
   console.error('❌ Failed to run expo export:', error.message);
   process.exit(1);
 }
-
-const distDir = path.join(__dirname, '..', 'dist');
-const docsDir = path.join(__dirname, '..', 'docs');
-const rootIndexPath = path.join(__dirname, '..', 'index.html');
-const distIndexPath = path.join(distDir, 'index.html');
 
 if (!fs.existsSync(distIndexPath)) {
   console.error('❌ Error: dist/index.html was not generated.');
@@ -29,7 +29,7 @@ let htmlContent = fs.readFileSync(distIndexPath, 'utf8');
 htmlContent = htmlContent.replace(/src="\/_expo\//g, 'src="./_expo/');
 htmlContent = htmlContent.replace(/href="\/favicon/g, 'href="./favicon');
 
-// Update Title & Meta for Web & Desktop
+// Update Title & Meta
 htmlContent = htmlContent.replace(
   '<title>business-monopoly</title>',
   '<title>Luxury Business Monopoly - Web & PC Edition</title><meta name="description" content="Play Luxury Business Monopoly on PC, Desktop, and Mobile Web browsers!" />'
@@ -38,7 +38,7 @@ htmlContent = htmlContent.replace(
 fs.writeFileSync(distIndexPath, htmlContent, 'utf8');
 console.log('✅ Fixed relative asset paths in dist/index.html');
 
-// Helper function to recursively copy directory
+// Recursive folder copy helper
 function copyFolderRecursiveSync(source, target) {
   if (!fs.existsSync(target)) {
     fs.mkdirSync(target, { recursive: true });
@@ -56,21 +56,37 @@ function copyFolderRecursiveSync(source, target) {
   });
 }
 
-// Step 3: Copy build output to /docs folder for GitHub Pages (/docs deployment)
+// Step 3: Copy build output to /docs directory for GitHub Pages (/docs option)
 try {
   copyFolderRecursiveSync(distDir, docsDir);
-  console.log('✅ Copied web bundle to /docs folder for GitHub Pages (/docs deployment option)');
+  console.log('✅ Copied web bundle to /docs folder');
 } catch (e) {
   console.warn('⚠️ Could not copy to /docs:', e.message);
 }
 
-// Step 4: Sync root index.html with fixed dist/index.html so root (/) deployment also works directly
-try {
-  // Replace relative ./ inside root index.html to point to dist/ or docs/ if needed, or host directly
-  // For root index.html, paths like ./dist/_expo/ or ./_expo/ work depending on whether assets are at root
-  // We also copy _expo, assets, favicon.ico to root or ensure root index.html redirects to dist/index.html
-} catch (e) {
-  console.warn('⚠️ Could not update root index.html:', e.message);
+// Step 4: Copy _expo folder to root directory so root (/) deployment option also works directly
+const rootExpoDir = path.join(projectRoot, '_expo');
+const distExpoDir = path.join(distDir, '_expo');
+if (fs.existsSync(distExpoDir)) {
+  try {
+    copyFolderRecursiveSync(distExpoDir, rootExpoDir);
+    console.log('✅ Copied _expo folder to project root');
+  } catch (e) {
+    console.warn('⚠️ Could not copy _expo to root:', e.message);
+  }
 }
 
-console.log('🎉 Web build completed successfully! Ready for GitHub Pages deployment.');
+// Step 5: Update root index.html to serve the web bundle directly (No iframe dependency)
+const rootIndexPath = path.join(projectRoot, 'index.html');
+fs.writeFileSync(rootIndexPath, htmlContent, 'utf8');
+console.log('✅ Updated root index.html to serve web app directly');
+
+// Step 6: Create .nojekyll files in project root, /docs, and /dist
+// (CRITICAL: Disables GitHub Pages Jekyll build so _expo directory and JS bundles are NOT ignored by GitHub Pages!)
+const noJekyllContent = '';
+fs.writeFileSync(path.join(projectRoot, '.nojekyll'), noJekyllContent, 'utf8');
+fs.writeFileSync(path.join(docsDir, '.nojekyll'), noJekyllContent, 'utf8');
+fs.writeFileSync(path.join(distDir, '.nojekyll'), noJekyllContent, 'utf8');
+console.log('✅ Created .nojekyll files in root, /docs, and /dist (Fixes 404 on _expo JS bundles)');
+
+console.log('🎉 Web build completed successfully! 100% ready for GitHub Pages deployment.');

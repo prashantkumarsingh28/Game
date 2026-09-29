@@ -79,14 +79,14 @@ const playMusicNote = (frequency, durationMs = 600, type = 'sine', volume = 0.04
   } catch (e) {}
 };
 
-// Luxury Monopoly Soothing Chord Progression
-const luxuryChords = [
-  [261.63, 329.63, 392.00, 493.88], // Cmaj7
-  [220.00, 261.63, 329.63, 392.00], // Am7
-  [174.61, 220.00, 261.63, 329.63], // Fmaj7
-  [196.00, 246.94, 293.66, 349.23], // G7
-  [164.81, 196.00, 246.94, 293.66], // Em7
-  [146.83, 174.61, 220.00, 261.63], // Dm7
+// Upbeat Luxury Monopoly Arpeggiated Melody Progressions
+const luxuryMelody = [
+  [261.63, 329.63, 392.00, 523.25], // Cmaj7 (Joyful Start)
+  [220.00, 261.63, 329.63, 440.00], // Am7 (Upbeat Lounge)
+  [349.23, 440.00, 523.25, 698.46], // Fmaj7 (Vibrant Gold)
+  [392.00, 493.88, 587.33, 783.99], // G7 (Bright Resolution)
+  [329.63, 392.00, 493.88, 659.25], // Em7 (Warm Harmony)
+  [293.66, 349.23, 440.00, 587.33], // Dm7 (Smooth Cadence)
 ];
 
 export const SoundManager = {
@@ -121,25 +121,25 @@ export const SoundManager = {
     if (bgMusicInterval || isMusicMuted) return;
     SoundManager.unlockAudio();
 
-    // Play immediate intro note
+    // Play immediate intro melody note
     try {
-      playMusicNote(261.63, 800, 'sine', 0.05);
+      playMusicNote(523.25, 700, 'sine', 0.04);
     } catch (e) {}
 
     bgMusicInterval = setInterval(() => {
       if (isMusicMuted) return;
       try {
-        const chord = luxuryChords[bgNoteIndex % luxuryChords.length];
+        const arpeggio = luxuryMelody[bgNoteIndex % luxuryMelody.length];
         bgNoteIndex++;
-        chord.forEach((freq, idx) => {
+        arpeggio.forEach((freq, idx) => {
           setTimeout(() => {
             if (!isMusicMuted) {
-              playMusicNote(freq, 750, 'sine', 0.04);
+              playMusicNote(freq, 700, 'sine', 0.045);
             }
-          }, idx * 260);
+          }, idx * 220);
         });
       } catch (e) {}
-    }, 3200);
+    }, 2800);
   },
 
   stopBackgroundMusic: () => {
@@ -211,6 +211,17 @@ export const SoundManager = {
     try {
       playTone(280, 100, 'sawtooth', 0.2);
       setTimeout(() => playTone(200, 140, 'sawtooth', 0.2), 90);
+    } catch (e) {}
+  },
+
+  playFineSound: () => {
+    if (isSfxMuted) return;
+    try {
+      // Fun comedy whistle slide: 820Hz -> 180Hz
+      playTone(820, 160, 'sawtooth', 0.22, 180);
+      // Low funny bounce boing
+      setTimeout(() => playTone(140, 120, 'sine', 0.28, 280), 170);
+      setTimeout(() => playTone(110, 150, 'triangle', 0.3, 70), 300);
     } catch (e) {}
   },
 

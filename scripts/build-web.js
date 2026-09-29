@@ -29,11 +29,44 @@ let htmlContent = fs.readFileSync(distIndexPath, 'utf8');
 htmlContent = htmlContent.replace(/src="\/_expo\//g, 'src="./_expo/');
 htmlContent = htmlContent.replace(/href="\/favicon/g, 'href="./favicon');
 
-// Update Title & Meta
-htmlContent = htmlContent.replace(
-  '<title>business-monopoly</title>',
-  '<title>Luxury Business Monopoly - Web & PC Edition</title><meta name="description" content="Play Luxury Business Monopoly on PC, Desktop, and Mobile Web browsers!" />'
-);
+// Update Title, Meta & Inject Stylish Fonts + FontAwesome CDN
+const fontTags = `
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" />
+<style>
+  @font-face {
+    font-family: 'FontAwesome5_Solid';
+    src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-solid-900.woff2') format('woff2'),
+         url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-solid-900.ttf') format('truetype');
+  }
+  @font-face {
+    font-family: 'FontAwesome5_Regular';
+    src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-regular-400.woff2') format('woff2'),
+         url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-regular-400.ttf') format('truetype');
+  }
+  @font-face {
+    font-family: 'FontAwesome5_Brands';
+    src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-brands-400.woff2') format('woff2');
+  }
+  @font-face {
+    font-family: 'FontAwesome';
+    src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/fonts/fontawesome-webfont.woff2') format('woff2');
+  }
+  html, body { font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif !important; }
+  *, input, button, select, textarea { font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif !important; }
+</style>
+`;
+
+if (htmlContent.includes('<title>business-monopoly</title>')) {
+  htmlContent = htmlContent.replace(
+    '<title>business-monopoly</title>',
+    `<title>Luxury Business Monopoly - Web & PC Edition</title><meta name="description" content="Play Luxury Business Monopoly on PC, Desktop, and Mobile Web browsers!" />${fontTags}`
+  );
+} else if (htmlContent.includes('</head>')) {
+  htmlContent = htmlContent.replace('</head>', `${fontTags}</head>`);
+}
 
 fs.writeFileSync(distIndexPath, htmlContent, 'utf8');
 console.log('✅ Fixed relative asset paths in dist/index.html');

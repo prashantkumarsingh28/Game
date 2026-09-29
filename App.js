@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Platform } from 'react-native';
+import { StyleSheet, View, ImageBackground, Platform } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 
@@ -9,6 +9,7 @@ import StartingMoneyScreen from './src/screens/StartingMoneyScreen';
 import GameScreen from './src/screens/GameScreen';
 import GameOverScreen from './src/screens/GameOverScreen';
 import { GAME_COLORS } from './src/styles/theme';
+import { ASSETS, getAssetSource } from './src/assets';
 
 export default function App() {
   const [screen, setScreen] = useState('WELCOME');
@@ -44,7 +45,11 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <View style={styles.webOuterContainer}>
+      <ImageBackground
+        source={getAssetSource(ASSETS.images.luxuryGameWallpaper || ASSETS.images.backgroundWallpaper)}
+        style={styles.webOuterContainer}
+        resizeMode="cover"
+      >
         <SafeAreaView style={styles.container}>
           <ExpoStatusBar style="light" />
 
@@ -79,7 +84,7 @@ export default function App() {
             />
           )}
         </SafeAreaView>
-      </View>
+      </ImageBackground>
     </SafeAreaProvider>
   );
 }
@@ -87,7 +92,6 @@ export default function App() {
 const styles = StyleSheet.create({
   webOuterContainer: {
     flex: 1,
-    backgroundColor: GAME_COLORS.background,
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
@@ -105,7 +109,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
-    backgroundColor: GAME_COLORS.background,
+    backgroundColor: 'transparent',
     ...(Platform.OS === 'web'
       ? {
           maxWidth: '100%',

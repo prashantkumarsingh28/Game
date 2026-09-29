@@ -389,7 +389,7 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
 
   const handleFineSpace = (space, actingPlayer = currentPlayer) => {
     const fineAmount = space.fineAmount || 1000;
-    SoundManager.playMoneySpent();
+    SoundManager.playFineSound();
     triggerPopup(`-${formatCurrency(fineAmount)}`, 'FINE PENALTY', '#F87171', 'gavel');
 
     const loanResult = processDeficitLoan(

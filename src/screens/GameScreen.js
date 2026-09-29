@@ -212,7 +212,7 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
         SoundManager.playTokenLanding();
         processDestinationSpace(currPos, stepPlayerObj);
       }
-    }, 90);
+    }, 260);
   };
 
   const processDestinationSpace = (position, actingPlayer = currentPlayer) => {

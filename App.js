@@ -94,9 +94,10 @@ const styles = StyleSheet.create({
     height: '100%',
     ...(Platform.OS === 'web'
       ? {
-          height: '100vh',
-          width: '100vw',
-          overflow: 'hidden',
+          minHeight: '100vh',
+          width: '100%',
+          overflowX: 'hidden',
+          overflowY: 'auto',
         }
       : {}),
   },
@@ -108,7 +109,7 @@ const styles = StyleSheet.create({
     ...(Platform.OS === 'web'
       ? {
           maxWidth: '100%',
-          maxHeight: '100vh',
+          minHeight: '100vh',
         }
       : {}),
   },

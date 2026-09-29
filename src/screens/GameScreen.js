@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ImageBackground,
+  Platform,
+  useWindowDimensions,
+  ScrollView,
+} from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { generateBoard } from '../game/boardGenerator';
 import { BOARD_SIZE } from '../game/gameRules';
@@ -22,6 +31,8 @@ import PlayerDetailsModal from '../components/PlayerDetailsModal';
 import ConfirmEndGameModal from '../components/ActionModals/ConfirmEndGameModal';
 
 export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOver }) {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isDesktop = windowWidth >= 900;
   const safePlayers = Array.isArray(initialPlayers) && initialPlayers.length > 0 ? initialPlayers : [];
   const initialCashAmount = safePlayers[0]?.cash || 10000;
 
@@ -432,145 +443,182 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
       resizeMode="cover"
     >
       <View style={styles.darkOverlay}>
-        <View style={styles.webResponsiveLayout}>
-          {/* Main Monopoly Board (Left / Top) */}
-          <View style={styles.boardContainerSection}>
-            <Board
-              board={board}
-              players={players}
-              currentPlayerIndex={currentPlayerIndex}
-              onSpacePress={(space) => {
-                if (space.type === 'CITY') {
-                  const owner = players.find(
-                    (p) => p.id === space.ownerId || (p.citiesOwned || []).includes(space.id)
-                  );
-                  setSelectedDetailsPlayerId(owner ? owner.id : currentPlayer.id);
-                  setDetailsModalVisible(true);
-                }
-              }}
-              centerContent={
-                <View style={styles.centerControlContainer}>
-                  {/* Floating Notification Badge */}
-                  {floatingPopup && (
-                    <View style={[styles.floatingBadge, { backgroundColor: floatingPopup.color }]}>
-                      <FontAwesome5 name={floatingPopup.icon} size={14} color="#FFFFFF" />
-                      <View style={{ marginLeft: 6 }}>
-                        <Text style={styles.floatingBadgeText}>{floatingPopup.text}</Text>
-                        <Text style={styles.floatingBadgeSub}>{floatingPopup.sub}</Text>
-                      </View>
-                    </View>
-                  )}
-
-                  {/* Active Turn Banner */}
-                  <View style={[styles.turnBanner, { backgroundColor: playerConfig.color }]}>
-                    <FontAwesome5 name="crown" size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
-                    <PlayerToken player={currentPlayer} size={18} isCurrentTurn={true} />
-                    <Text style={styles.turnBannerText}>
-                      {currentPlayer.name}'s Turn
-                    </Text>
-                  </View>
-
-                  {/* Interactive Physical Dice */}
-                  <Dice
-                    value={diceValue}
-                    disabled={isMoving || buyModalVisible || marketModalVisible || transactionModal.visible}
-                    onRoll={(val) => {
-                      handleRollDice(val);
-                    }}
-                  />
-
-                  <Text style={styles.roundTrackerText}>
-                    Round {currentPlayer.roundCount} • Purchases: {currentPlayer.citiesPurchasedThisRound}/4
-                  </Text>
-                </View>
-              }
-            />
-          </View>
-
-          {/* Side Controls & HUD Panel - Large Size Monopoly Box for Web */}
-          <View style={styles.sidebarSection}>
-            {/* Header Bar inside Monopoly Box */}
-            <View style={styles.headerBar}>
-              <View style={styles.logoRow}>
-                <FontAwesome5 name="dice-d6" size={18} color="#F59E0B" />
-                <Text style={styles.headerTitle}>LUXURY MONOPOLY</Text>
-              </View>
-
-              <View style={styles.headerRightRow}>
-                {/* Timer Badge */}
-                {timerMinutes > 0 && (
-                  <View
-                    style={[
-                      styles.timerBadge,
-                      secondsLeft <= 60 && styles.lowTimerBadge,
-                    ]}
-                  >
-                    <FontAwesome5
-                      name="clock"
-                      size={12}
-                      color={secondsLeft <= 60 ? '#EF4444' : '#F59E0B'}
-                    />
-                    <Text
-                      style={[
-                        styles.timerText,
-                        secondsLeft <= 60 && styles.lowTimerText,
-                      ]}
-                    >
-                      {formatTimer(secondsLeft)}
-                    </Text>
-                  </View>
-                )}
-
-                {/* SFX Toggle Button */}
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  style={styles.iconBtn}
-                  onPress={handleToggleSfx}
-                >
-                  <FontAwesome5
-                    name={isSfxMuted ? 'volume-mute' : 'volume-up'}
-                    size={14}
-                    color={isSfxMuted ? '#94A3B8' : '#34D399'}
-                  />
-                </TouchableOpacity>
-
-                {/* Music Toggle Button */}
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  style={styles.iconBtn}
-                  onPress={handleToggleMusic}
-                >
-                  <FontAwesome5
-                    name={isMusicMuted ? 'music' : 'play-circle'}
-                    size={14}
-                    color={isMusicMuted ? '#94A3B8' : '#F59E0B'}
-                  />
-                </TouchableOpacity>
-
-                {/* End Game Button */}
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  style={styles.endGameBtn}
-                  onPress={() => {
-                    SoundManager.playButtonClick();
-                    setEndGameModalVisible(true);
-                  }}
-                >
-                  <FontAwesome5 name="flag-checkered" size={13} color="#EF4444" />
-                </TouchableOpacity>
-              </View>
+        <ScrollView
+          contentContainerStyle={[
+            styles.mainScrollContainer,
+            isDesktop ? styles.desktopScrollContainer : styles.mobileScrollContainer,
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Top Header Control Bar with Explicit Text Labels */}
+          <View style={styles.topHeaderBar}>
+            <View style={styles.logoRow}>
+              <FontAwesome5 name="dice-d6" size={18} color="#F59E0B" />
+              <Text style={styles.headerTitle}>LUXURY MONOPOLY</Text>
             </View>
 
-            {/* Player Stats HUD Panel inside Monopoly Box */}
-            <PlayerPanel
-              players={players}
-              currentPlayerIndex={currentPlayerIndex}
-              onOpenDetails={(playerId) => {
-                setSelectedDetailsPlayerId(playerId);
-                setDetailsModalVisible(true);
-              }}
-            />
+            <View style={styles.headerRightRow}>
+              {/* Timer Badge */}
+              {timerMinutes > 0 && (
+                <View
+                  style={[
+                    styles.timerBadge,
+                    secondsLeft <= 60 && styles.lowTimerBadge,
+                  ]}
+                >
+                  <FontAwesome5
+                    name="clock"
+                    size={12}
+                    color={secondsLeft <= 60 ? '#EF4444' : '#F59E0B'}
+                  />
+                  <Text
+                    style={[
+                      styles.timerText,
+                      secondsLeft <= 60 && styles.lowTimerText,
+                    ]}
+                  >
+                    {formatTimer(secondsLeft)}
+                  </Text>
+                </View>
+              )}
+
+              {/* SFX Toggle Button with Explicit Visible Text */}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[
+                  styles.controlPill,
+                  isSfxMuted ? styles.controlPillMuted : styles.controlPillActiveSfx,
+                ]}
+                onPress={handleToggleSfx}
+              >
+                <FontAwesome5
+                  name={isSfxMuted ? 'volume-mute' : 'volume-up'}
+                  size={13}
+                  color={isSfxMuted ? '#94A3B8' : '#34D399'}
+                />
+                <Text style={[styles.controlPillText, { color: isSfxMuted ? '#94A3B8' : '#34D399' }]}>
+                  {isSfxMuted ? 'Sound: OFF' : 'Sound: ON'}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Music Toggle Button with Explicit Visible Text */}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[
+                  styles.controlPill,
+                  isMusicMuted ? styles.controlPillMuted : styles.controlPillActiveMusic,
+                ]}
+                onPress={handleToggleMusic}
+              >
+                <FontAwesome5
+                  name={isMusicMuted ? 'volume-mute' : 'music'}
+                  size={13}
+                  color={isMusicMuted ? '#94A3B8' : '#F59E0B'}
+                />
+                <Text style={[styles.controlPillText, { color: isMusicMuted ? '#94A3B8' : '#F59E0B' }]}>
+                  {isMusicMuted ? 'Music: OFF' : 'Music: ON'}
+                </Text>
+              </TouchableOpacity>
+
+              {/* End / Exit Game Button with Explicit Visible Text */}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={styles.controlPillExit}
+                onPress={() => {
+                  SoundManager.playButtonClick();
+                  setEndGameModalVisible(true);
+                }}
+              >
+                <FontAwesome5 name="sign-out-alt" size={13} color="#EF4444" />
+                <Text style={styles.controlPillExitText}>Exit Game</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+
+          {/* Main Game Layout (Row for Desktop, Column for Mobile Phone Web) */}
+          <View style={isDesktop ? styles.desktopLayoutRow : styles.mobileLayoutColumn}>
+            {/* Main Monopoly Board */}
+            <View
+              style={[
+                styles.boardContainerSection,
+                isDesktop
+                  ? { flex: 1, maxWidth: Math.min(windowHeight * 0.78, 620) }
+                  : { width: '100%', maxWidth: Math.min(windowWidth - 16, 480) },
+              ]}
+            >
+              <Board
+                board={board}
+                players={players}
+                currentPlayerIndex={currentPlayerIndex}
+                onSpacePress={(space) => {
+                  if (space.type === 'CITY') {
+                    const owner = players.find(
+                      (p) => p.id === space.ownerId || (p.citiesOwned || []).includes(space.id)
+                    );
+                    setSelectedDetailsPlayerId(owner ? owner.id : currentPlayer.id);
+                    setDetailsModalVisible(true);
+                  }
+                }}
+                centerContent={
+                  <View style={styles.centerControlContainer}>
+                    {/* Floating Notification Badge */}
+                    {floatingPopup && (
+                      <View style={[styles.floatingBadge, { backgroundColor: floatingPopup.color }]}>
+                        <FontAwesome5 name={floatingPopup.icon} size={14} color="#FFFFFF" />
+                        <View style={{ marginLeft: 6 }}>
+                          <Text style={styles.floatingBadgeText}>{floatingPopup.text}</Text>
+                          <Text style={styles.floatingBadgeSub}>{floatingPopup.sub}</Text>
+                        </View>
+                      </View>
+                    )}
+
+                    {/* Active Turn Banner */}
+                    <View style={[styles.turnBanner, { backgroundColor: playerConfig.color }]}>
+                      <FontAwesome5 name="crown" size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+                      <PlayerToken player={currentPlayer} size={18} isCurrentTurn={true} />
+                      <Text style={styles.turnBannerText}>
+                        {currentPlayer.name}'s Turn
+                      </Text>
+                    </View>
+
+                    {/* Interactive Physical Dice */}
+                    <Dice
+                      value={diceValue}
+                      disabled={isMoving || buyModalVisible || marketModalVisible || transactionModal.visible}
+                      onRoll={(val) => {
+                        handleRollDice(val);
+                      }}
+                    />
+
+                    <Text style={styles.roundTrackerText}>
+                      Round {currentPlayer.roundCount} • Purchases: {currentPlayer.citiesPurchasedThisRound}/4
+                    </Text>
+                  </View>
+                }
+              />
+            </View>
+
+            {/* Side Controls & HUD Panel */}
+            <View
+              style={[
+                styles.sidebarSection,
+                isDesktop
+                  ? { width: 440 }
+                  : { width: '100%', maxWidth: Math.min(windowWidth - 16, 480) },
+              ]}
+            >
+              {/* Player Stats HUD Panel */}
+              <PlayerPanel
+                players={players}
+                currentPlayerIndex={currentPlayerIndex}
+                onOpenDetails={(playerId) => {
+                  setSelectedDetailsPlayerId(playerId);
+                  setDetailsModalVisible(true);
+                }}
+              />
+            </View>
+          </View>
+        </ScrollView>
 
           {/* Action Modals */}
           <BuyCityModal
@@ -617,7 +665,6 @@ export default function GameScreen({ initialPlayers, timerMinutes = 0, onGameOve
             onCancel={() => setEndGameModalVisible(false)}
           />
         </View>
-      </View>
     </ImageBackground>
   );
 }
@@ -630,80 +677,122 @@ const styles = StyleSheet.create({
   },
   darkOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(11, 19, 43, 0.35)', // Semi-transparent dark overlay allowing wallpaper to shine behind board
+    backgroundColor: 'rgba(11, 19, 43, 0.35)',
   },
-  webResponsiveLayout: {
-    flex: 1,
-    flexDirection: Platform.OS === 'web' ? 'row' : 'column',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: Platform.OS === 'web' ? 12 : 36,
-    paddingBottom: 8,
-    paddingHorizontal: Platform.OS === 'web' ? 16 : 6,
-    gap: Platform.OS === 'web' ? 16 : 4,
+  mainScrollContainer: {
+    flexGrow: 1,
+    paddingHorizontal: 12,
+    paddingTop: Platform.OS === 'web' ? 12 : 28,
+    paddingBottom: 24,
   },
-  boardContainerSection: {
-    flex: Platform.OS === 'web' ? 1 : undefined,
-    width: Platform.OS === 'web' ? 'auto' : '100%',
-    height: Platform.OS === 'web' ? '100%' : 'auto',
+  desktopScrollContainer: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-  sidebarSection: {
-    width: Platform.OS === 'web' ? 480 : '100%',
-    justifyContent: 'space-between',
-    backgroundColor: Platform.OS === 'web' ? 'rgba(15, 23, 42, 0.95)' : 'transparent',
-    padding: Platform.OS === 'web' ? 20 : 0,
-    borderRadius: Platform.OS === 'web' ? 22 : 0,
-    borderWidth: Platform.OS === 'web' ? 2.5 : 0,
-    borderColor: Platform.OS === 'web' ? '#D97706' : 'transparent',
-    shadowColor: '#F59E0B',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
-    elevation: 12,
-    gap: 14,
+  mobileScrollContainer: {
+    alignItems: 'center',
   },
-  container: {
-    flex: 1,
-    justifyContent: 'space-between',
-    paddingTop: 36,
-    paddingBottom: 8,
-    paddingHorizontal: 6,
-  },
-  headerBar: {
+  topHeaderBar: {
+    width: '100%',
+    maxWidth: 1100,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 6,
-    marginBottom: 2,
+    backgroundColor: 'rgba(15, 23, 42, 0.94)',
+    borderColor: '#D97706',
+    borderWidth: 1.5,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 8,
+    flexWrap: 'wrap',
+    gap: 8,
   },
   logoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   headerTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '900',
     color: '#F59E0B',
-    letterSpacing: 1.2,
+    letterSpacing: 1.5,
   },
   headerRightRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  controlPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1.5,
     gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  controlPillActiveSfx: {
+    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+    borderColor: '#34D399',
+  },
+  controlPillActiveMusic: {
+    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+    borderColor: '#F59E0B',
+  },
+  controlPillMuted: {
+    backgroundColor: 'rgba(30, 41, 59, 0.85)',
+    borderColor: '#64748B',
+  },
+  controlPillText: {
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.4,
+  },
+  controlPillExit: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    borderColor: '#EF4444',
+    borderWidth: 1.5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 6,
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  controlPillExitText: {
+    color: '#F87171',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 0.4,
   },
   timerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(245, 158, 11, 0.2)',
     borderColor: '#F59E0B',
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    borderWidth: 1.5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 12,
-    gap: 4,
+    gap: 5,
   },
   lowTimerBadge: {
     borderColor: '#EF4444',
@@ -711,27 +800,43 @@ const styles = StyleSheet.create({
   },
   timerText: {
     color: '#F59E0B',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '900',
   },
   lowTimerText: {
     color: '#EF4444',
   },
-  iconBtn: {
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
-    borderColor: 'rgba(245, 158, 11, 0.3)',
-    borderWidth: 1,
-    padding: 6,
-    borderRadius: 10,
-    elevation: 2,
+  desktopLayoutRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    width: '100%',
+    maxWidth: 1100,
+    gap: 16,
   },
-  endGameBtn: {
-    backgroundColor: 'rgba(239, 68, 68, 0.25)',
-    borderColor: '#EF4444',
-    borderWidth: 1,
-    padding: 6,
-    borderRadius: 10,
-    elevation: 2,
+  mobileLayoutColumn: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 480,
+    gap: 12,
+  },
+  boardContainerSection: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sidebarSection: {
+    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+    padding: 14,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#D97706',
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 14,
+    elevation: 10,
+    gap: 10,
   },
   centerControlContainer: {
     alignItems: 'center',

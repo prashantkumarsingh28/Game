@@ -14,6 +14,17 @@ const shuffleArray = (array) => {
   return arr;
 };
 
+const CITY_COLOR_PALETTES = [
+  { color: '#EF4444', glow: 'rgba(239, 68, 68, 0.4)', group: 'Ruby' },
+  { color: '#F59E0B', glow: 'rgba(245, 158, 11, 0.4)', group: 'Gold' },
+  { color: '#10B981', glow: 'rgba(16, 185, 129, 0.4)', group: 'Emerald' },
+  { color: '#3B82F6', glow: 'rgba(59, 130, 246, 0.4)', group: 'Sapphire' },
+  { color: '#8B5CF6', glow: 'rgba(139, 92, 246, 0.4)', group: 'Amethyst' },
+  { color: '#EC4899', glow: 'rgba(236, 72, 153, 0.4)', group: 'Rose' },
+  { color: '#06B6D4', glow: 'rgba(6, 182, 212, 0.4)', group: 'Cyan' },
+  { color: '#F97316', glow: 'rgba(249, 115, 22, 0.4)', group: 'Coral' },
+];
+
 /**
  * Generates a randomized board scaled dynamically according to starting money.
  * Base starting money is ₹5,000 (multiplier = 1).
@@ -26,6 +37,8 @@ export const generateBoard = (startingMoney = 5000) => {
 
   // Helper to create city space
   const createCitySpace = (id) => {
+    const paletteIndex = cityIndex % CITY_COLOR_PALETTES.length;
+    const palette = CITY_COLOR_PALETTES[paletteIndex];
     const cityInfo = shuffledCities[cityIndex++] || {
       id: `city_${id}`,
       name: `City ${id}`,
@@ -42,6 +55,8 @@ export const generateBoard = (startingMoney = 5000) => {
       ownerId: null,
       houseLevel: 0,
       baseRent: baseRent,
+      color: palette.color,
+      glowColor: palette.glow,
     };
   };
 

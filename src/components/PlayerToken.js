@@ -6,15 +6,16 @@ import { PLAYER_CONFIGS } from '../styles/theme';
 export default function PlayerToken({ player, size = 22, isCurrentTurn = false }) {
   if (!player) return null;
   const config = PLAYER_CONFIGS.find((p) => p.id === player.id) || PLAYER_CONFIGS[0];
+  const showIcon = size >= 18;
 
   return (
     <View style={styles.outerShadowWrapper}>
-      {/* Subtle Shadow beneath the piece */}
+      {/* Ground Shadow */}
       <View
         style={[
           styles.groundShadow,
           {
-            width: size * 1.1,
+            width: size * 1.15,
             height: size * 0.35,
             borderRadius: size * 0.2,
           },
@@ -30,19 +31,24 @@ export default function PlayerToken({ player, size = 22, isCurrentTurn = false }
             height: size,
             borderRadius: size / 2,
             backgroundColor: config.color,
-            borderColor: '#FCD34D', // Gold outer ring
+            borderColor: isCurrentTurn ? '#FFFFFF' : '#FCD34D',
             borderWidth: isCurrentTurn ? 2.5 : 1.5,
           },
+          isCurrentTurn && { shadowColor: config.color },
           isCurrentTurn && styles.activeGlow,
         ]}
       >
         {/* Top Glossy Highlight */}
-        <View style={[styles.glossHighlight, { width: size * 0.6, height: size * 0.25 }]} />
+        <View style={[styles.glossHighlight, { width: size * 0.65, height: size * 0.25 }]} />
 
-        {/* Inner Label / Icon */}
-        <Text style={[styles.tokenText, { fontSize: size * 0.5 }]}>
-          P{player.id}
-        </Text>
+        {/* Inner Label or Icon */}
+        {showIcon ? (
+          <FontAwesome5 name={config.icon} size={size * 0.45} color="#FFFFFF" />
+        ) : (
+          <Text style={[styles.tokenText, { fontSize: size * 0.5 }]}>
+            P{player.id}
+          </Text>
+        )}
       </View>
     </View>
   );

@@ -26,18 +26,19 @@ export default function PlayerPanel({ players, currentPlayerIndex, onOpenDetails
             style={[
               styles.playerCard,
               {
-                borderColor: isCurrent ? '#F59E0B' : 'rgba(255, 255, 255, 0.25)',
-                borderWidth: isCurrent ? 3 : 1.5,
+                borderColor: isCurrent ? config.color : 'rgba(255, 255, 255, 0.18)',
+                borderWidth: isCurrent ? 2.5 : 1.5,
                 backgroundColor: isCurrent
                   ? 'rgba(30, 41, 59, 0.98)'
                   : 'rgba(15, 23, 42, 0.92)',
               },
+              isCurrent && { shadowColor: config.color },
               isCurrent && styles.activeCardGlow,
             ]}
           >
             {/* Header: Token, Name & Active Turn Badge */}
             <View style={styles.headerRow}>
-              <PlayerToken player={player} size={20} isCurrentTurn={isCurrent} />
+              <PlayerToken player={player} size={22} isCurrentTurn={isCurrent} />
               <Text
                 style={[
                   styles.playerName,
@@ -49,23 +50,24 @@ export default function PlayerPanel({ players, currentPlayerIndex, onOpenDetails
               </Text>
 
               {isCurrent ? (
-                <View style={styles.activeBadge}>
-                  <FontAwesome5 name="crown" size={9} color="#0F172A" style={{ marginRight: 3 }} />
+                <View style={[styles.activeBadge, { backgroundColor: config.color }]}>
+                  <FontAwesome5 name="crown" size={9} color="#FFFFFF" style={{ marginRight: 4 }} />
                   <Text style={styles.activeBadgeText}>ACTIVE TURN</Text>
                 </View>
               ) : (
                 <View style={styles.detailsBadge}>
-                  <FontAwesome5 name="chart-pie" size={9} color="#FCD34D" style={{ marginRight: 3 }} />
+                  <FontAwesome5 name="chart-pie" size={9} color="#FCD34D" style={{ marginRight: 4 }} />
                   <Text style={styles.detailsBadgeText}>DETAILS</Text>
                 </View>
               )}
             </View>
 
-            {/* Financial Stats Grid */}
+            {/* Financial Stats Grid with Equal Aligned Boxes */}
             <View style={styles.statsContainer}>
-              <View style={styles.statItem}>
+              {/* Cash Box */}
+              <View style={styles.statBox}>
                 <View style={styles.statLabelRow}>
-                  <FontAwesome5 name="coins" size={8} color="#34D399" />
+                  <FontAwesome5 name="coins" size={9} color="#34D399" />
                   <Text style={styles.statLabel}>CASH</Text>
                 </View>
                 <Text style={styles.cashValue}>
@@ -73,10 +75,11 @@ export default function PlayerPanel({ players, currentPlayerIndex, onOpenDetails
                 </Text>
               </View>
 
+              {/* Loan Box (If loan active) */}
               {player.loan > 0 && (
-                <View style={styles.statItem}>
+                <View style={[styles.statBox, styles.loanStatBox]}>
                   <View style={styles.statLabelRow}>
-                    <FontAwesome5 name="university" size={8} color="#F87171" />
+                    <FontAwesome5 name="university" size={9} color="#F87171" />
                     <Text style={styles.statLabel}>LOAN</Text>
                   </View>
                   <Text style={styles.loanValue}>
@@ -85,9 +88,10 @@ export default function PlayerPanel({ players, currentPlayerIndex, onOpenDetails
                 </View>
               )}
 
-              <View style={styles.statItem}>
+              {/* Cities Box */}
+              <View style={styles.statBox}>
                 <View style={styles.statLabelRow}>
-                  <FontAwesome5 name="building" size={8} color="#F59E0B" />
+                  <FontAwesome5 name="building" size={9} color="#F59E0B" />
                   <Text style={styles.statLabel}>CITIES</Text>
                 </View>
                 <Text style={styles.propValue}>
@@ -95,9 +99,10 @@ export default function PlayerPanel({ players, currentPlayerIndex, onOpenDetails
                 </Text>
               </View>
 
-              <View style={styles.statItem}>
+              {/* Tile Location Box */}
+              <View style={styles.statBox}>
                 <View style={styles.statLabelRow}>
-                  <FontAwesome5 name="map-marker-alt" size={8} color="#60A5FA" />
+                  <FontAwesome5 name="map-marker-alt" size={9} color="#60A5FA" />
                   <Text style={styles.statLabel}>TILE</Text>
                 </View>
                 <Text style={styles.statValue}>#{player.position}</Text>
@@ -120,11 +125,11 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     gap: 10,
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   playerCard: {
     width: '100%',
-    borderRadius: 14,
+    borderRadius: 16,
     padding: 12,
     elevation: 8,
     shadowColor: '#000',
@@ -133,9 +138,8 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
   },
   activeCardGlow: {
-    shadowColor: '#F59E0B',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.85,
+    shadowOpacity: 0.9,
     shadowRadius: 12,
     elevation: 10,
   },
@@ -153,25 +157,25 @@ const styles = StyleSheet.create({
   activeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F59E0B',
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingVertical: 3.5,
+    borderRadius: 8,
   },
   activeBadgeText: {
-    color: '#0F172A',
+    color: '#FFFFFF',
     fontSize: 8.5,
     fontWeight: '900',
+    letterSpacing: 0.3,
   },
   detailsBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(245, 158, 11, 0.25)',
-    borderColor: 'rgba(245, 158, 11, 0.6)',
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+    borderColor: 'rgba(245, 158, 11, 0.5)',
     borderWidth: 1,
     paddingHorizontal: 7,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   detailsBadgeText: {
     color: '#FCD34D',
@@ -182,15 +186,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    gap: 6,
+    width: '100%',
+  },
+  statBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
     borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
-  statItem: {
-    alignItems: 'center',
+  loanStatBox: {
+    backgroundColor: 'rgba(127, 29, 29, 0.3)',
+    borderColor: 'rgba(239, 68, 68, 0.4)',
   },
   statLabelRow: {
     flexDirection: 'row',
@@ -204,22 +216,22 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   statValue: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '900',
     color: '#F8FAFC',
   },
   propValue: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '900',
     color: '#F59E0B',
   },
   cashValue: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '900',
     color: '#34D399',
   },
   loanValue: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '900',
     color: '#F87171',
   },
@@ -228,16 +240,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(245, 158, 11, 0.18)',
+    backgroundColor: 'rgba(245, 158, 11, 0.16)',
     borderRadius: 8,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.4)',
+    borderColor: 'rgba(245, 158, 11, 0.35)',
   },
   viewDetailsStripText: {
     color: '#FCD34D',
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: '900',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
 });
